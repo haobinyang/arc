@@ -1,0 +1,21 @@
+https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch01.html
+http://gad.qq.com/article/detail/31397
+https://blog.csdn.net/pizi0475/article/details/48518463
+https://github.com/Postrediori/OceanSimulation
+https://www.keithlantz.net/2011/10/ocean-simulation-part-one-using-the-discrete-fourier-transform/
+https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
+https://github.com/CaffeineViking/osgw/blob/master/share/shader/gerstner.glsl
+https://github.com/Gentle22/Urho3D-Ocean/blob/master/Source/Samples/101_Ocean/OceanAlgorithms.cpp
+https://blog.csdn.net/soilwork/article/details/1548490
+https://trederia.blogspot.com/2014/09/water-in-opengl-and-gles-20-part-4.html
+https://blog.csdn.net/l773575310/article/details/78637965
+
+
+// ÊýÑ§¿â
+https://github.com/toji/gl-matrix
+
+// ¹Ç÷À¶¯»­
+http://www.wazim.com/Collada_Tutorial_1.htm
+http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
+https://www.khronos.org/opengl/wiki/Skeletal_Animation
+https://veeenu.github.io/2014/05/09/implementing-skeletal-animation.html
