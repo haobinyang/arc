@@ -35,8 +35,23 @@ export default {
             img.onload = function(){
                 resolve(this);
             };
-            img.style['transform'] = 'scaleY(-1)';
             img.src = path;
+        });
+    },
+    async getVideo(path, options){
+        options = options || {};
+
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+
+            video.autoplay = options.autoplay ? options.autoplay : false;
+            video.muted = options.muted ? options.muted : false;
+            video.loop = options.loop ? options.loop : false;
+            video.src = path;
+
+            video.addEventListener("loadedmetadata", function(){
+                resolve(video);
+            }, false);
         });
     },
     sleep(ms){

@@ -25,7 +25,14 @@ export default (async function(){
     let bufferFloat = liteGl.getExtension('EXT_color_buffer_float');
 
     let img = await Tools.readImage('./textures/water-texture.jpg');
-    let texture = liteGl.createTexture2D(img, {
+    let texture = liteGl.createTexture(img, {
+        format: liteGl.RGB,
+        type: liteGl.UNSIGNED_BYTE,
+        generateMipmaps: false
+    });
+
+    let video = await Tools.getVideo('./textures/Firefox.mp4', {loop: true});
+    let videoTexture = liteGl.createTexture(video, {
         format: liteGl.RGB,
         type: liteGl.UNSIGNED_BYTE,
         generateMipmaps: false
@@ -45,7 +52,7 @@ export default (async function(){
     let lightPos = new Vec3(0, 2, 2);
     directionalLight.setPosition(lightPos);
 
-    let mesh = Tools.mesh(100, 100, [-2, 2], [-2, 2]);
+    let mesh = Tools.mesh(4, 4, [-2, 2], [-2, 2]);
 
     let vertices = mesh.vertices;
     let waveSurface = new Model({
@@ -167,18 +174,18 @@ export default (async function(){
         liteGl.setUniformf([directionalLight.position.x, directionalLight.position.y, directionalLight.position.z], 'lightPos');
 
         // cpu计算
-        let {vertexBuffer, normalBuffer} = GerstnerWaves(vertices, timestamp);
-        waveSurface.normalBuffer.update(new Float32Array(normalBuffer), 0);
-        waveSurface.vertexBuffer.update(new Float32Array(vertexBuffer), 0);
+        // let {vertexBuffer, normalBuffer} = GerstnerWaves(vertices, timestamp);
+        // waveSurface.normalBuffer.update(new Float32Array(normalBuffer), 0);
+        // waveSurface.vertexBuffer.update(new Float32Array(vertexBuffer), 0);
 
         liteGl.setAttribute(waveSurface.vertexBuffer, 'coordinates');
         liteGl.setAttribute(waveSurface.normalBuffer, 'normals');
         liteGl.setAttribute(waveSurface.textureBuffer, 'textureCoord');
 
-        liteGl.useTexture(texture, 'uSampler');
-        // liteGl.render(waveSurface, liteGl.TRIANGLES);
+        liteGl.useTexture(videoTexture, 'uSampler');
+        liteGl.render(waveSurface, liteGl.TRIANGLES);
 
-        liteGl.render(waveSurface, liteGl.LINES);
+        // liteGl.render(waveSurface, liteGl.LINES);
     };
 
     liteGl.start();

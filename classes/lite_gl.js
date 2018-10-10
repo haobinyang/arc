@@ -5,7 +5,7 @@ import {Mat4} from './matrix.js';
 import {FPS} from './fps.js';
 import {Shader} from './shader.js';
 import {Buffer} from './buffer.js';
-import {Texture2D} from './texture.js';
+import {Texture2D, VideoTexture} from './texture.js';
 
 export class LiteGL{
     constructor(canvasInstance, options){
@@ -195,12 +195,14 @@ export class LiteGL{
         return shader;
     }
 
-    createTexture2D(img, options){
-        let texture = new Texture2D(img, options);
+    createTexture(data, options){
+        let texture = data instanceof HTMLVideoElement ? new VideoTexture(data, options) : new Texture2D(data, options);
+
+        texture.glContext = this.gl;
         texture.instance = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture.instance);
 
-        if(texture.data instanceof HTMLImageElement){
+        if(texture.data instanceof HTMLImageElement || texture.data instanceof HTMLVideoElement){
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, texture.format, texture.format, texture.type, texture.data);
         }else{
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, texture.data);
@@ -224,6 +226,11 @@ export class LiteGL{
     }
 
     useTexture(texture, variableName){
+        if(texture instanceof VideoTexture){
+            texture.play();
+            texture.update();
+        }
+
         this.gl.activeTexture(this.gl['TEXTURE' + this.textureIndex]);
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture.instance);
         this.setUniformi([this.textureIndex], variableName);
