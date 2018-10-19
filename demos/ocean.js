@@ -9,6 +9,7 @@ import {PerspectiveCamera, OrthographicCamera} from '../classes/camera.js';
 import {Vec2, Vec3, Vec4} from '../classes/vector.js';
 import {AmbientLight, DirectionalLight} from '../classes/light.js';
 import {ObjLoader} from '../classes/obj_loader.js';
+import {CanvasFont} from '../classes/font.js';
 
 export default (async function(){
     let canvas = document.querySelector('#canvas');
@@ -25,6 +26,7 @@ export default (async function(){
     let bufferFloat = liteGl.getExtension('EXT_color_buffer_float');
 
     let img = await Tools.readImage('./textures/water-texture.jpg');
+    let dl = await Tools.readImage('./textures/dl.png');
     let texture = liteGl.createTexture(img, {
         format: liteGl.RGB,
         type: liteGl.UNSIGNED_BYTE,
@@ -158,35 +160,42 @@ export default (async function(){
 
     liteGl.onStart = function(timestamp){
         liteGl.enable(liteGl.DEPTH_TEST);
-        liteGl.useShader(vertShader, fragShader);
-    };
+        // liteGl.useShader(vertShader, fragShader);
 
-    liteGl.onLoop = function(timestamp){
         liteGl.viewport(0, 0, liteGl.width, liteGl.height);
         liteGl.clearColor(new Color(0, 0, 0, 1));
         liteGl.clear(liteGl.COLOR_BUFFER_BIT | liteGl.DEPTH_BUFFER_BIT);
 
-        liteGl.useCamera(camera, 'camera');
-        liteGl.setUniformf([camera.position.x, camera.position.y, camera.position.z], 'viewPos');
+        let font = liteGl.createFont(new CanvasFont('hello, 世界'));
+        font.renderToScreen();
+    };
 
-        liteGl.useLight(ambientLight, 'ambient');
-        liteGl.useLight(directionalLight, 'lightColor');
-        liteGl.setUniformf([directionalLight.position.x, directionalLight.position.y, directionalLight.position.z], 'lightPos');
+    // liteGl.onLoop = function(timestamp){
+        // liteGl.viewport(0, 0, liteGl.width, liteGl.height);
+        // liteGl.clearColor(new Color(0, 0, 0, 1));
+        // liteGl.clear(liteGl.COLOR_BUFFER_BIT | liteGl.DEPTH_BUFFER_BIT);
+
+        // liteGl.useCamera(camera, 'camera');
+        // liteGl.setUniformf([camera.position.x, camera.position.y, camera.position.z], 'viewPos');
+        //
+        // liteGl.useLight(ambientLight, 'ambient');
+        // liteGl.useLight(directionalLight, 'lightColor');
+        // liteGl.setUniformf([directionalLight.position.x, directionalLight.position.y, directionalLight.position.z], 'lightPos');
 
         // cpu计算
         // let {vertexBuffer, normalBuffer} = GerstnerWaves(vertices, timestamp);
         // waveSurface.normalBuffer.update(new Float32Array(normalBuffer), 0);
         // waveSurface.vertexBuffer.update(new Float32Array(vertexBuffer), 0);
 
-        liteGl.setAttribute(waveSurface.vertexBuffer, 'coordinates');
-        liteGl.setAttribute(waveSurface.normalBuffer, 'normals');
-        liteGl.setAttribute(waveSurface.textureBuffer, 'textureCoord');
-
-        liteGl.useTexture(videoTexture, 'uSampler');
-        liteGl.render(waveSurface, liteGl.TRIANGLES);
+        // liteGl.setAttribute(waveSurface.vertexBuffer, 'coordinates');
+        // liteGl.setAttribute(waveSurface.normalBuffer, 'normals');
+        // liteGl.setAttribute(waveSurface.textureBuffer, 'textureCoord');
+        //
+        // liteGl.useTexture(videoTexture, 'uSampler');
+        // liteGl.render(waveSurface, liteGl.TRIANGLES);
 
         // liteGl.render(waveSurface, liteGl.LINES);
-    };
+    // };
 
     liteGl.start();
 }());

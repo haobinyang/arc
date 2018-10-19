@@ -34,6 +34,9 @@ export class LiteGL{
         // render mode
         this.RenderMode = Object.freeze({"SCREEN": 1, "TEXTURE": 2, 'DEPTH': 3, 'STENCIL': 4});
 
+        this.currentVertShader = null;
+        this.currentFragShader = null;
+
         // show fps
         if(this.options.fps){
             this.FPS = new FPS(this.canvasInstance);
@@ -201,8 +204,8 @@ export class LiteGL{
         texture.glContext = this.gl;
         texture.instance = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture.instance);
-
-        if(texture.data instanceof HTMLImageElement || texture.data instanceof HTMLVideoElement){
+        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+        if(texture.data instanceof HTMLImageElement || texture.data instanceof HTMLVideoElement || texture.data instanceof HTMLCanvasElement){
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, texture.format, texture.format, texture.type, texture.data);
         }else{
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, texture.data);
@@ -219,6 +222,11 @@ export class LiteGL{
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         return texture;
+    }
+
+    createFont(font){
+        font.liteGlContext = this;
+        return font;
     }
 
     deleteTexture(texture){
@@ -243,6 +251,8 @@ export class LiteGL{
             this.gl.deleteProgram(this.shaderProgram);
         }
 
+        this.currentVertShader = vertShader;
+        this.currentFragShader = fragShader;
         this.shaderProgram = this.gl.createProgram();
 
         this.gl.attachShader(this.shaderProgram, vertShader.instance);
@@ -259,17 +269,7 @@ export class LiteGL{
     }
 
     useCamera(cam, variableName){
-        let ang = Math.tan((cam.fov * 0.5) * Math.PI / 180);//angle*.5
-
-        let perspetive = new Mat4(new Float32Array([
-            0.5 / ang, 0, 0, 0,
-            0, 0.5 * cam.aspect / ang, 0, 0,
-            0, 0, -(cam.far + cam.near) / (cam.far - cam.near), -1,
-            0, 0, (-2 * cam.far * cam.near) / (cam.far - cam.near), 0 
-        ]));
-
-        let lookAt = Mat4.lookAt(cam.position, cam.center, cam.up);
-        this.setUniformMatrix(perspetive.multiply(lookAt).data, variableName);
+        this.setUniformMatrix(cam.camMatrix, variableName);
     }
 
     useLight(light, variableName){
