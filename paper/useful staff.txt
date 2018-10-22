@@ -20,3 +20,6 @@ http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
 https://www.khronos.org/opengl/wiki/Skeletal_Animation
 https://veeenu.github.io/2014/05/09/implementing-skeletal-animation.html
 https://github.com/jagenjo/collada.js
+
+// font render
+https://stackoverflow.com/questions/25956272/better-quality-text-in-webgl

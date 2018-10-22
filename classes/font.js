@@ -13,46 +13,35 @@ export class Font{
 }
 
 export class CanvasFont extends Font{
-    constructor(text, options){
+    constructor(text, fontOptions, layoutOptions){
         super(text);
 
-        this.options = options || {};
+        fontOptions = fontOptions || {};
+        layoutOptions = layoutOptions || {};
+
+        this.fontOptions = Object.assign({
+            'font-style': 'normal',
+            'font-variant': 'normal',
+            'font-weight': 'normal',
+            'font-size': '10px',
+            'font-family': 'sans-serif',
+            'color': '#fff',
+            'transparent': true
+        }, fontOptions);
+
+        this.layoutOptions = Object.assign({
+            'width': 0,
+            'height': 0,
+            'left': 0,
+            'top': 0
+        }, layoutOptions);
+
+        this.autoResize = !(this.layoutOptions.width && this.layoutOptions.height);
+
         this.canvas = document.createElement('canvas');
     }
 
-    update(){
-
-    }
-
-    renderToScreen(options){
-        if(!this.liteGlContext){
-            throw 'need LiteGL instance';
-        }
-
-        options = options || {};
-
-        const opt = {
-            autoResize: options.autoResize != undefined ? options.autoResize : true, // if true, other options will not be used
-            left: options.left || 0,
-            top: options.top || 0,
-            width: options.width || 0,
-            height: options.height || 0
-        };
-
-        this.canvas.width = 512;
-        this.canvas.height = 512;
-        this.canvas.style['width'] = 512 + 'px';
-        this.canvas.style['height'] = 512 + 'px';
-
-        var ctx = this.canvas.getContext('2d');
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.fillStyle = "#fff";
-        ctx.font = "20px Arial";
-        ctx.fillText(this.text, 10, 50);
-
-        // const currentVertShader = this.liteGlContext.currentVertShader;
-        // const currentFragShader = this.liteGlContext.currentFragShader;
-
+    init(){
         // shader text
         const fontVs = 'attribute vec3 coordinates;\
             attribute vec2 textureCoord;\
@@ -69,57 +58,105 @@ export class CanvasFont extends Font{
                 gl_FragColor = texture2D(uSampler, vTextureCoord);\
             }';
 
+        this.vertShader = this.liteGlContext.createShader(fontVs, WebGLRenderingContext.VERTEX_SHADER);
+        this.fragShader = this.liteGlContext.createShader(fontFs, WebGLRenderingContext.FRAGMENT_SHADER);
 
-        let vertShader = this.liteGlContext.createShader(fontVs, WebGLRenderingContext.VERTEX_SHADER);
-        let fragShader = this.liteGlContext.createShader(fontFs, WebGLRenderingContext.FRAGMENT_SHADER);
+        this.orthoCamera = new OrthographicCamera(0, this.liteGlContext.width, this.liteGlContext.height, 0, 0, 1000);
 
-        this.liteGlContext.useShader(vertShader, fragShader);
+        this._updateCanvasSize();
 
-        let orthoCamera = new OrthographicCamera(0, this.liteGlContext.width, this.liteGlContext.height, 0, 0, 1000);
-        this.liteGlContext.useCamera(orthoCamera, 'camera');
+        this.fontTexture = this.liteGlContext.createTexture(this.canvas, {
+            format: this.fontOptions.transparent ? WebGLRenderingContext.RGB : WebGLRenderingContext.RGBA,
+            type: WebGLRenderingContext.UNSIGNED_BYTE,
+            generateMipmaps: false
+        });
 
-        // let img = new Image();
-        // img.onload = () => {
-            let fontTexture = this.liteGlContext.createTexture(this.canvas, {
-                width: 512,
-                height: 512,
-                format: WebGLRenderingContext.RGB,
-                type: WebGLRenderingContext.UNSIGNED_BYTE,
-                generateMipmaps: false
-            });
+        this.fontQuad = new Model({
+            vertexBuffer: this.liteGlContext.createBuffer(new Float32Array([
+                0, 0, -1,
+                1, 0, -1,
+                1, 1, -1,
+                0, 1, -1
+            ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 3),
+            indexBuffer: this.liteGlContext.createBuffer(new Uint16Array([
+                0, 1, 2, 0, 2, 3
+            ]), WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.UNSIGNED_SHORT, 1),
+            textureBuffer: this.liteGlContext.createBuffer(new Float32Array([
+                0, 0, 1, 0, 1, 1, 0, 1
+            ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 2)
+        });
 
-            let fontQuad = new Model({
-                vertexBuffer: this.liteGlContext.createBuffer(new Float32Array([
-                    0, 0, -1,
-                    512, 0, -1,
-                    512, 512, -1,
-                    0, 512, -1
-                ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 3),
-                indexBuffer: this.liteGlContext.createBuffer(new Uint16Array([
-                    0, 1, 2, 0, 2, 3
-                ]), WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.UNSIGNED_SHORT, 1),
-                textureBuffer: this.liteGlContext.createBuffer(new Float32Array([
-                    0, 0, 1, 0, 1, 1, 0, 1
-                ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 2)
-            });
-
-            this.liteGlContext.setAttribute(fontQuad.vertexBuffer, 'coordinates');
-            this.liteGlContext.setAttribute(fontQuad.textureBuffer, 'textureCoord');
-
-            this.liteGlContext.useTexture(fontTexture, 'uSampler');
-
-            this.liteGlContext.render(fontQuad, WebGLRenderingContext.TRIANGLES);
-
-            // switch to current shader
-            // this.liteGlContext.useShader(currentVertShader, currentFragShader);
-        // };
-        // img.src = this.canvas.toDataURL('image/png');
-
-        // document.body.appendChild(img);
+        this.setText(this.text);
     }
 
-    renderToTexture(texture){
+    setText(text){
+        this.text = text;
 
+        this._updateCanvasSize();
+
+        let ctx = this.canvas.getContext('2d');
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillStyle = this.fontOptions.color;
+        ctx.font = this._optionsToString(this.fontOptions);
+        ctx.fillText(this.text, 0, this.layoutOptions.height * 0.9);
+
+        this.fontTexture.update(this.canvas);
+        this.fontQuad.vertexBuffer.update(new Float32Array([
+            this.layoutOptions.left, this.layoutOptions.top, -1,
+            this.layoutOptions.width + this.layoutOptions.left, this.layoutOptions.top, -1,
+            this.layoutOptions.width + this.layoutOptions.left, this.layoutOptions.height + this.layoutOptions.top, -1,
+            this.layoutOptions.left, this.layoutOptions.height + this.layoutOptions.top, -1
+        ]), 0);
+    }
+
+    _updateCanvasSize(){
+        const textSize = this._getTextSize(this.text, this.fontOptions);
+        this.layoutOptions.width = this.autoResize ? textSize.width : this.layoutOptions.width;
+        this.layoutOptions.height = this.autoResize ? textSize.height : this.layoutOptions.height;
+
+        this.canvas.width = this.layoutOptions.width;
+        this.canvas.height = this.layoutOptions.height;
+    }
+
+    _getTextSize(text, options){
+        let div = document.createElement('div');
+        div.style['display'] = 'inline-block';
+        div.style['font-style'] = options['font-style'];
+        div.style['font-variant'] = options['font-variant'];
+        div.style['font-weight'] = options['font-weight'];
+        div.style['font-size'] = options['font-size'];
+        div.style['line-height'] = options['font-size'];
+        div.style['font-family'] = options['font-family'];
+        div.style['border'] = 0;
+        div.innerText = text;
+        document.body.appendChild(div);
+        const size = {width: div.clientWidth, height: div.clientHeight};
+        div.parentNode.removeChild(div);
+        return size;
+    }
+
+    // convert canvas font object to string
+    _optionsToString(options){
+        options = options || {};
+        return (Object.keys(options).map((key) => {
+            return key.indexOf('font-') === 0 ? options[key] : '';
+        }).join(' ')).trim();
+    }
+
+    renderToScreen(){
+        this.liteGlContext.useShader(this.vertShader, this.fragShader);
+        this.liteGlContext.useCamera(this.orthoCamera, 'camera');
+
+        this.liteGlContext.setAttribute(this.fontQuad.vertexBuffer, 'coordinates');
+        this.liteGlContext.setAttribute(this.fontQuad.textureBuffer, 'textureCoord');
+
+        this.liteGlContext.useTexture(this.fontTexture, 'uSampler');
+
+        this.liteGlContext.render(this.fontQuad, WebGLRenderingContext.TRIANGLES);
+    }
+
+    renderAsTexture(){
+        return this.fontTexture;
     }
 }
 

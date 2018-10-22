@@ -39,7 +39,7 @@ export class LiteGL{
 
         // show fps
         if(this.options.fps){
-            this.FPS = new FPS(this.canvasInstance);
+            this.FPS = new FPS(this);
         }
 
         return new Proxy(this, {
@@ -66,8 +66,8 @@ export class LiteGL{
 
     loop(){
         if(!this.isEnd){
-            this.FPS && this.FPS.update();
             this.onLoop && this.onLoop(Date.now());
+            this.FPS && this.FPS.update();
             window.requestAnimationFrame(this.loop.bind(this));
         }
     }
@@ -226,6 +226,7 @@ export class LiteGL{
 
     createFont(font){
         font.liteGlContext = this;
+        font.init();
         return font;
     }
 

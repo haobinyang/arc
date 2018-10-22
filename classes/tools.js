@@ -49,12 +49,15 @@ export default {
             video.loop = options.loop ? options.loop : false;
             video.src = path;
 
-            video.addEventListener("loadedmetadata", function(){
+            video.addEventListener("loadedmetadata", async () => {
+                video.width = video.videoWidth;
+                video.height = video.videoHeight;
+                await this.sleep(100);
                 resolve(video);
             }, false);
         });
     },
-    sleep(ms){
+    async sleep(ms){
         return new Promise(resolve => setTimeout(resolve, ms));
     },
     mesh(row, column, xRange = [-1, 1], zRange = [-1, 1]){

@@ -24,6 +24,13 @@ export class Texture2D{
         this.instance = null;
         this.glContext = null;
     }
+
+    update(data){
+        this.data = data;
+        this.glContext.bindTexture(this.glContext.TEXTURE_2D, this.instance);
+        this.glContext.texImage2D(this.glContext.TEXTURE_2D, 0, this.format, this.format, this.type, this.data);
+        this.glContext.bindTexture(this.glContext.TEXTURE_2D, null);
+    }
 }
 
 export class VideoTexture extends Texture2D{
