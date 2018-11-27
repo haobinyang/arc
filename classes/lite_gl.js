@@ -1,11 +1,11 @@
 import GlConfig from '../config/gl_config.js';
 import {Color} from './color.js';
 import Tools from './tools.js';
-import {Mat4} from './matrix.js';
 import {FPS} from './fps.js';
 import {Shader} from './shader.js';
 import {Buffer} from './buffer.js';
 import {Texture2D, VideoTexture} from './texture.js';
+import {Event} from './event.js';
 
 export class LiteGL{
     constructor(canvasInstance, options){
@@ -14,6 +14,7 @@ export class LiteGL{
         }
 
         this.canvasInstance = canvasInstance;
+        this.canvasInstance.setAttribute('tabindex', 1); // 监听键盘事件
 
         this.options = options || {};
         this.gl = canvasInstance.getContext('webgl', this.options);
@@ -41,6 +42,9 @@ export class LiteGL{
         if(this.options.fps){
             this.FPS = new FPS(this);
         }
+
+        // 事件容器
+        this.event = new Event(this.canvasInstance);
 
         return new Proxy(this, {
             get(obj, prop){
@@ -204,7 +208,8 @@ export class LiteGL{
         texture.glContext = this.gl;
         texture.instance = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture.instance);
-        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
         if(texture.data instanceof HTMLImageElement || texture.data instanceof HTMLVideoElement || texture.data instanceof HTMLCanvasElement){
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, texture.format, texture.format, texture.type, texture.data);
         }else{
@@ -221,6 +226,7 @@ export class LiteGL{
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, texture.magFilter);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+
         return texture;
     }
 
@@ -277,5 +283,15 @@ export class LiteGL{
         let color = Color.ToGlColor(light.color);
         let intensity = light.intensity;
         this.setUniformf([color.r * intensity, color.g * intensity, color.b * intensity, color.a], variableName);
+    }
+
+    // 绑定UI事件
+    attachEvent(input, callback){
+        this.event.attach(input, callback);
+    }
+
+    // 删除事件
+    detachEvent(input, callback){
+        this.event.detach(input, callback);
     }
 }

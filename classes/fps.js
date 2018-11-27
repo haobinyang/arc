@@ -28,7 +28,6 @@ export class FPS{
             this._fps = 0;
             this.lastTime = this.currentTime;
             this.font.setText('FPS: ' + this.fps);
-            console.log(this.fps);
         }
 
         this.font.renderToScreen();
