@@ -6,12 +6,12 @@ export class PerspectiveCamera{
         this.aspect = aspect;
         this.near = near;
         this.far = far;
-        this.position = new Vec3(0.0, 0.0, 0.0);
-        this.center = new Vec3(0.0, 0.0, 0.0);
-        this.up = new Vec3(0, 1, 0);
-        this.perspective = mat4.create();
-        this.modelView = mat4.create();
-        this.camMatrix = mat4.create();
+        this.position = glm.vec3(0.0, 0.0, 0.0);
+        this.center = glm.vec3(0.0, 0.0, 0.0);
+        this.up = glm.vec3(0, 1, 0);
+        this.perspective = glm.mat4();
+        this.modelView = glm.mat4();
+        this.camMatrix = glm.mat4();
 
         this.update();
     }
@@ -32,9 +32,9 @@ export class PerspectiveCamera{
     }
 
     update(){
-        mat4.perspective(this.perspective, this.fov * Math.PI / 180, this.aspect, this.near, this.far);
-        mat4.lookAt(this.modelView, [this.position.x, this.position.y, this.position.z], [this.center.x, this.center.y, this.center.z], [this.up.x, this.up.y, this.up.z]);
-        mat4.multiply(this.camMatrix, this.perspective, this.modelView);
+        this.perspective = glm.perspective(glm.radians(this.fov), this.aspect, this.near, this.far);
+        this.modelView = glm.lookAt(this.position, this.center, this.up);
+        this.camMatrix = this.perspective['*'](this.modelView);
     }
 }
 
@@ -46,12 +46,12 @@ export class OrthographicCamera{
         this.top = top;
         this.near = near;
         this.far = far;
-        this.camMatrix = mat4.create();
+        this.camMatrix = glm.mat4();
 
         this.update();
     }
 
     update(){
-        mat4.ortho(this.camMatrix, this.left, this.right, this.bottom, this.top, this.near, this.far);
+        this.camMatrix = glm.ortho(this.left, this.right, this.bottom, this.top, this.near, this.far);
     }
 }

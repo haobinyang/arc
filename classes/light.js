@@ -1,6 +1,3 @@
-import {Color} from './color.js';
-import {Vec2, Vec3, Vec4} from './vector.js';
-
 class Light{
     constructor(color, intensity){
         this.color = color;
@@ -17,7 +14,7 @@ export class AmbientLight extends Light{
 export class DirectionalLight extends Light{
     constructor(color, intensity){
         super(color, intensity);
-        this.position = new Vec3(0, 1, 0);
+        this.position = glm.vec3(0, 1, 0);
         this.enableShadow = false;
     }
 

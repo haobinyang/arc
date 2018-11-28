@@ -141,8 +141,8 @@ export class LiteGL{
     _setUniform(data, variableName, suffix){
         let location = this.gl.getUniformLocation(this.shaderProgram, variableName);
 
-        if(Tools.isNumber(data)){
-            data = [data];
+        if(glm.$isGLMObject(data)){
+            data = glm.$to_array(data);
         }
 
         if((Tools.isFloat32Array(data) || Tools.isArray(data)) && data.length <= 4){
@@ -169,6 +169,10 @@ export class LiteGL{
     }
 
     setUniformMatrix(data, variableName){
+        if(glm.$isGLMObject(data)){
+            data = glm.$to_array(data);
+        }
+
         if(Tools.isArray(data) || Tools.isFloat32Array(data)){
             let len = data.length;
 
@@ -280,9 +284,7 @@ export class LiteGL{
     }
 
     useLight(light, variableName){
-        let color = Color.ToGlColor(light.color);
-        let intensity = light.intensity;
-        this.setUniformf([color.r * intensity, color.g * intensity, color.b * intensity, color.a], variableName);
+        this.setUniformf(glm.vec4((glm.vec3(light.color))['*'](light.intensity), light.color.a), variableName);
     }
 
     // 绑定UI事件

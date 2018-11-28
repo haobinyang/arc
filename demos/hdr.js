@@ -31,43 +31,63 @@ export default (async function(){
     let fragShader = liteGl.createShader(fragmentShaderCode, liteGl.FRAGMENT_SHADER);
 
     let camera = new PerspectiveCamera(40, liteGl.width / liteGl.height, 1, 100);
-    let cameraPos = new Vec3(10, 10, 10);
+    let cameraPos = glm.vec3(10, 10, 10);
     camera.setPosition(cameraPos);
 
-    let img = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45 _col.jpg');
-    let col3 = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45 _col_3.jpg');
-    let col2 = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45_col_2.jpg');
-    let steel = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45-steel detail_2_col.jpg');
-
-    let texture1 = liteGl.createTexture(img, {
-        format: liteGl.RGB,
-        generateMipmaps: false
-    });
-    let col3Tex = liteGl.createTexture(col3, {
-        format: liteGl.RGB,
-        generateMipmaps: false
-    });
-    let col2Tex = liteGl.createTexture(col2, {
-        format: liteGl.RGB,
-        generateMipmaps: false
-    });
-    let steelTex = liteGl.createTexture(steel, {
-        format: liteGl.RGB,
-        generateMipmaps: false
-    });
+    // let img = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45 _col.jpg');
+    // let col3 = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45 _col_3.jpg');
+    // let col2 = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45_col_2.jpg');
+    // let steel = await Tools.readImage('./models/c2lpk7avgum8-E-45-Aircraft/E-45-Aircraft/textures/E-45-steel detail_2_col.jpg');
+    //
+    // let texture1 = liteGl.createTexture(img, {
+    //     format: liteGl.RGB,
+    //     generateMipmaps: false
+    // });
+    // let col3Tex = liteGl.createTexture(col3, {
+    //     format: liteGl.RGB,
+    //     generateMipmaps: false
+    // });
+    // let col2Tex = liteGl.createTexture(col2, {
+    //     format: liteGl.RGB,
+    //     generateMipmaps: false
+    // });
+    // let steelTex = liteGl.createTexture(steel, {
+    //     format: liteGl.RGB,
+    //     generateMipmaps: false
+    // });
 
     let gundamModel = null;
-    let rotateMatrix = mat4.create();
-    mat4.rotate(rotateMatrix, rotateMatrix, -Math.PI, vec3.fromValues(0, 1, 0));
+    let rotateMatrix = glm.rotate(glm.mat4(), -Math.PI, glm.vec3(0, 1, 0));
 
     /** 模拟拖动事件 **/
-    let isDown = false;
+    let isDown = false, oldScreenPos = glm.vec2(0, 0);
+
+    function getArcballVector(pos){
+        let P = glm.vec3(1.0 * pos.x / liteGl.width * 2 - 1.0, 1.0 * pos.y / liteGl.height * 2 - 1.0, 0);
+        P.y = -P.y; // y轴对称映射
+
+        let OP_squared = P.x * P.x + P.y * P.y;
+        if(OP_squared <= 1){
+            P.z = Math.sqrt(1 - OP_squared); // Pythagoras
+        }else{
+            P = glm.normalize(P); // nearest point
+        }
+        return P;
+    }
     liteGl.attachEvent(Input.Mouse.Left.Down, function(e){
         isDown = true;
+        oldScreenPos = glm.vec2(e.clientX, e.clientY);
     });
     liteGl.attachEvent(Input.Mouse.Left.Move, function(e){
         if(isDown){
-            console.log('move:' + e.type);
+            let oldPos = getArcballVector(oldScreenPos),
+                curPos = getArcballVector(glm.vec2(e.clientX, e.clientY));
+
+            let angle = Math.acos(Math.min(1, glm.dot(oldPos, curPos)));
+            console.log(angle);
+
+            oldScreenPos.x = e.clientX;
+            oldScreenPos.y = e.clientY;
         }
     });
     liteGl.attachEvent(Input.Mouse.Left.Up, function(e){
@@ -81,19 +101,19 @@ export default (async function(){
     };
 
     liteGl.onLoop = function(){
-        liteGl.viewport(0, 0, liteGl.width, liteGl.height);
-        liteGl.clearColor(new Color(0, 0, 0, 1));
-        liteGl.clear(liteGl.COLOR_BUFFER_BIT | liteGl.DEPTH_BUFFER_BIT);
-
-        liteGl.useCamera(camera, 'camera');
-        liteGl.setUniformMatrix(rotateMatrix, 'model');
-        liteGl.setAttribute(gundamModel.vertexBuffer, 'coordinates');
-        liteGl.setAttribute(gundamModel.textureBuffer, 'textureCoord');
-        liteGl.useTexture(texture1, 'uSampler');
-        liteGl.useTexture(steelTex, 'steel');
-        liteGl.useTexture(col3Tex, 'col3');
-        liteGl.useTexture(col2Tex, 'col2');
-        liteGl.render(gundamModel, liteGl.TRIANGLES);
+        // liteGl.viewport(0, 0, liteGl.width, liteGl.height);
+        // liteGl.clearColor(new Color(0, 0, 0, 1));
+        // liteGl.clear(liteGl.COLOR_BUFFER_BIT | liteGl.DEPTH_BUFFER_BIT);
+        //
+        // liteGl.useCamera(camera, 'camera');
+        // liteGl.setUniformMatrix(rotateMatrix, 'model');
+        // liteGl.setAttribute(gundamModel.vertexBuffer, 'coordinates');
+        // liteGl.setAttribute(gundamModel.textureBuffer, 'textureCoord');
+        // liteGl.useTexture(texture1, 'uSampler');
+        // liteGl.useTexture(steelTex, 'steel');
+        // liteGl.useTexture(col3Tex, 'col3');
+        // liteGl.useTexture(col2Tex, 'col2');
+        // liteGl.render(gundamModel, liteGl.TRIANGLES);
     };
 
     OBJ.downloadMeshes({
