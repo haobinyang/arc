@@ -2,8 +2,8 @@ import {Model} from '../classes/model.js';
 import {Buffer} from '../classes/buffer.js';
 
 export default function(gl){
-    return gl.createModel(new Model({
-        vertexBuffer: new Buffer(new Float32Array([
+    return new Model({
+        vertexBuffer: gl.createBuffer(new Float32Array([
             // Front face
             -1.0, -1.0,  1.0,
              1.0, -1.0,  1.0,
@@ -40,7 +40,7 @@ export default function(gl){
             -1.0,  1.0,  1.0,
             -1.0,  1.0, -1.0
         ]), gl.ARRAY_BUFFER, gl.STATIC_DRAW, gl.FLOAT, 3),
-        normalBuffer: new Buffer(new Float32Array([
+        normalBuffer: gl.createBuffer(new Float32Array([
             // Front face
              0.0,  0.0,  1.0,
              0.0,  0.0,  1.0,
@@ -77,7 +77,7 @@ export default function(gl){
             -1.0,  0.0,  0.0,
             -1.0,  0.0,  0.0
         ]), gl.ARRAY_BUFFER, gl.STATIC_DRAW, gl.FLOAT, 3),
-        indexBuffer: new Buffer(new Uint16Array([
+        indexBuffer: gl.createBuffer(new Uint16Array([
             0, 1, 2,      0, 2, 3,    // Front face
             4, 5, 6,      4, 6, 7,    // Back face
             8, 9, 10,     8, 10, 11,  // Top face
@@ -85,7 +85,7 @@ export default function(gl){
             16, 17, 18,   16, 18, 19, // Right face
             20, 21, 22,   20, 22, 23  // Left face
         ]), gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, gl.UNSIGNED_SHORT, 1),
-        colorBuffer: new Buffer(new Float32Array([
+        colorBuffer: gl.createBuffer(new Float32Array([
             5,3,7, 5,3,7, 5,3,7, 5,3,7,
             1,1,3, 1,1,3, 1,1,3, 1,1,3,
             0,0,1, 0,0,1, 0,0,1, 0,0,1,
@@ -93,7 +93,7 @@ export default function(gl){
             1,1,0, 1,1,0, 1,1,0, 1,1,0,
             0,1,0, 0,1,0, 0,1,0, 0,1,0
         ]), gl.ARRAY_BUFFER, gl.STATIC_DRAW, gl.FLOAT, 3),
-        textureBuffer: new Buffer(new Float32Array([
+        textureBuffer: gl.createBuffer(new Float32Array([
             // Front face
             0.0, 0.0,
             1.0, 0.0,
@@ -130,5 +130,5 @@ export default function(gl){
             1.0, 1.0,
             0.0, 1.0
         ]), gl.ARRAY_BUFFER, gl.STATIC_DRAW, gl.FLOAT, 2)
-    }));
+    });
 };

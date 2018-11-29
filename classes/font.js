@@ -23,7 +23,7 @@ export class CanvasFont extends Font{
             'font-style': 'normal',
             'font-variant': 'normal',
             'font-weight': 'normal',
-            'font-size': '10px',
+            'font-size': '14px',
             'font-family': 'sans-serif',
             'color': '#fff',
             'transparent': true
@@ -98,7 +98,7 @@ export class CanvasFont extends Font{
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.fillStyle = this.fontOptions.color;
         ctx.font = this._optionsToString(this.fontOptions);
-        ctx.fillText(this.text, 0, this.layoutOptions.height * 0.9);
+        ctx.fillText(this.text, 0, this.layoutOptions.height * 0.8);
 
         this.fontTexture.update(this.canvas);
         this.fontQuad.vertexBuffer.update(new Float32Array([

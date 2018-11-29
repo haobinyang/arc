@@ -82,8 +82,7 @@ export class LiteGL{
     }
 
     clearColor(color){
-        color = Color.ToGlColor(color);
-        this.gl.clearColor(color.r, color.g, color.b, color.a);
+        this.gl.clearColor(...glm.$to_array(color));
     }
 
     render(model, mode, count = undefined, offset = 0){
@@ -170,7 +169,7 @@ export class LiteGL{
 
     setUniformMatrix(data, variableName){
         if(glm.$isGLMObject(data)){
-            data = glm.$to_array(data);
+            data = new Float32Array(glm.$to_array(data));
         }
 
         if(Tools.isArray(data) || Tools.isFloat32Array(data)){
