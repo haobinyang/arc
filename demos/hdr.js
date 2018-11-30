@@ -90,52 +90,52 @@ export default (async function(){
             let angle = Math.acos(cosTheta);
             let sinTheta = Math.sin(angle);
             let axis = glm.normalize(glm.cross(oldPos, curPos));//glm.normalize(glm.cross(oldPos, curPos));
-            axis = glm.vec3(-axis.x, -axis.y, axis.z);
+            // axis = glm.vec3(-axis.x, -axis.y, -axis.z);
 
             // Rodrigues' rotation formula https://semath.info/src/rodrigues-rotation.html
-            // rotateMatrix = glm.mat4(
-            //     glm.vec4(
-            //         cosTheta + axis.x * axis.x * (1 - cosTheta),
-            //         axis.x * axis.y * (1 - cosTheta) - axis.z * sinTheta,
-            //         axis.x * axis.z * (1 - cosTheta) + axis.y * sinTheta,
-            //         0
-            //     ),
-            //     glm.vec4(
-            //         axis.x * axis.y * (1 - cosTheta) + axis.z * sinTheta,
-            //         cosTheta + axis.y * axis.y * (1 - cosTheta),
-            //         axis.y * axis.z * (1 - cosTheta) - axis.x * sinTheta,
-            //         0
-            //     ),
-            //     glm.vec4(
-            //         axis.x * axis.z * (1 - cosTheta) - axis.y * sinTheta,
-            //         axis.y * axis.z * (1 - cosTheta) + axis.x * sinTheta,
-            //         cosTheta + axis.z * axis.z * (1 - cosTheta),
-            //         0
-            //     ),
-            //     glm.vec4(0,0,0,1)
-            // );
-
             rotateMatrix = rotateMatrix['*'](glm.mat4(
                 glm.vec4(
-                    1 + (1 - cosTheta) * (axis.x * axis.x - 1),
+                    cosTheta + axis.x * axis.x * (1 - cosTheta),
                     axis.x * axis.y * (1 - cosTheta) - axis.z * sinTheta,
                     axis.x * axis.z * (1 - cosTheta) + axis.y * sinTheta,
                     0
                 ),
                 glm.vec4(
                     axis.x * axis.y * (1 - cosTheta) + axis.z * sinTheta,
-                    1 + (axis.y * axis.y - 1) * (1 - cosTheta),
+                    cosTheta + axis.y * axis.y * (1 - cosTheta),
                     axis.y * axis.z * (1 - cosTheta) - axis.x * sinTheta,
                     0
                 ),
                 glm.vec4(
                     axis.x * axis.z * (1 - cosTheta) - axis.y * sinTheta,
                     axis.y * axis.z * (1 - cosTheta) + axis.x * sinTheta,
-                    1 + (axis.z * axis.z - 1) * (1 - cosTheta),
+                    cosTheta + axis.z * axis.z * (1 - cosTheta),
                     0
                 ),
                 glm.vec4(0,0,0,1)
             ));
+
+            // rotateMatrix = rotateMatrix['*'](glm.mat4(
+            //     glm.vec4(
+            //         1 + (1 - cosTheta) * (axis.x * axis.x - 1),
+            //         axis.x * axis.y * (1 - cosTheta) - axis.z * sinTheta,
+            //         axis.x * axis.z * (1 - cosTheta) + axis.y * sinTheta,
+            //         0
+            //     ),
+            //     glm.vec4(
+            //         axis.x * axis.y * (1 - cosTheta) + axis.z * sinTheta,
+            //         1 + (axis.y * axis.y - 1) * (1 - cosTheta),
+            //         axis.y * axis.z * (1 - cosTheta) - axis.x * sinTheta,
+            //         0
+            //     ),
+            //     glm.vec4(
+            //         axis.x * axis.z * (1 - cosTheta) - axis.y * sinTheta,
+            //         axis.y * axis.z * (1 - cosTheta) + axis.x * sinTheta,
+            //         1 + (axis.z * axis.z - 1) * (1 - cosTheta),
+            //         0
+            //     ),
+            //     glm.vec4(0,0,0,1)
+            // ));
 
             sumAngle += angle;
 
@@ -143,6 +143,14 @@ export default (async function(){
                 dY = (e.clientY - oldScreenPos.y) * 2 * Math.PI / liteGl.height;
             THETA += dX;
             PHI += dY;
+
+            //rotateMatrix = glm.rotate(glm.mat4(), THETA, glm.vec3(0, 1, 0));
+            //rotateMatrix = glm.mat4(...(rotateX(glm.$to_array(rotateMatrix), PHI)));
+
+            rotateMatrix = glm.rotate(glm.mat4(), PHI, glm.vec3(1, 0, 0));
+            rotateMatrix = glm.rotate(rotateMatrix, THETA, glm.vec3(0, 1, 0));
+
+            // glm.rotate(glm.rotate(glm.mat4(), -0.02204626423571785, glm.vec3(1, 0, 0)), -0.03306939635357677, glm.vec3(0, 1, 0))
 
             // rotateMatrix = glm.rotate(rotateMatrix, angle, axis);
 
@@ -173,29 +181,8 @@ export default (async function(){
     });
     /** 模拟拖动事件 end **/
 
-    let cube = CubeModel(liteGl);
-    delete cube.normalBuffer;
-    delete cube.colorBuffer;
-
-    // gundamModel = cube;
 
     let angleFont = liteGl.createFont(new CanvasFont('', {}, {left: 10, top: 40}));
-
-    function rotateX(m, angle){
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        var mv1 = m[1], mv5 = m[5], mv9 = m[9];
-
-        m[1] = m[1] * c - m[2] * s;
-        m[5] = m[5] * c - m[6] * s;
-        m[9] = m[9] * c - m[10] * s;
-
-        m[2] = m[2] * c + mv1 * s;
-        m[6] = m[6] * c + mv5 * s;
-        m[10] = m[10] * c + mv9 * s;
-
-        return m;
-    }
 
     liteGl.onStart = function(){
         liteGl.enable(liteGl.DEPTH_TEST);
@@ -206,11 +193,8 @@ export default (async function(){
         liteGl.clearColor(glm.vec4(0, 0, 0, 1));
         liteGl.clear(liteGl.COLOR_BUFFER_BIT | liteGl.DEPTH_BUFFER_BIT);
 
-        angleFont.setText('Angle: ' + (totalAngle * 180 / Math.PI));
+        angleFont.setText('Angle: ' + (totalAngle * 180 / Math.PI).toFixed(2));
         angleFont.renderToScreen();
-
-        rotateMatrix = glm.rotate(glm.mat4(), THETA, glm.vec3(0, 1, 0));
-        rotateMatrix = glm.mat4(...(rotateX(glm.$to_array(rotateMatrix), PHI)));
 
         liteGl.useShader(vertShader, fragShader);
         liteGl.useCamera(camera, 'camera');
