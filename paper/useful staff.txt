@@ -27,3 +27,6 @@ https://stackoverflow.com/questions/25956272/better-quality-text-in-webgl
 // arcball
 https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
 http://www.songho.ca/opengl/gl_camera.html
+
+// 圣诞树
+https://community.wolfram.com/groups/-/m/t/175891
