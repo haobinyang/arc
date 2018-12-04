@@ -181,6 +181,15 @@ export default (async function(){
     });
     /** 模拟拖动事件 end **/
 
+    // 播放音乐
+    let sleepAway = await Tools.loadAudio('./audio/Sleep_Away.mp3', {loop: true});
+    liteGl.attachEvent(Input.Keyboard.Space.Down, function(){
+        if(sleepAway.paused){
+            sleepAway.play();
+        }else{
+            sleepAway.pause();
+        }
+    });
 
     let angleFont = liteGl.createFont(new CanvasFont('', {}, {left: 10, top: 40}));
 

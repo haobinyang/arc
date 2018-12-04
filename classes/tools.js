@@ -57,6 +57,19 @@ export default {
             }, false);
         });
     },
+    async loadAudio(path, options){
+        options = options || {};
+
+        return new Promise((resolve, reject) => {
+            const audio = new Audio(path);
+
+            audio.loop = options.loop ? options.loop : false;
+
+            audio.addEventListener("canplaythrough", async () => {
+                resolve(audio);
+            }, false);
+        });
+    },
     async sleep(ms){
         return new Promise(resolve => setTimeout(resolve, ms));
     },
