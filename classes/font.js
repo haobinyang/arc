@@ -77,13 +77,13 @@ export class CanvasFont extends Font{
                 1, 0, -1,
                 1, 1, -1,
                 0, 1, -1
-            ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 3),
-            indexBuffer: this.liteGlContext.createBuffer(new Uint16Array([
-                0, 1, 2, 0, 2, 3
-            ]), WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.UNSIGNED_SHORT, 1),
-            textureBuffer: this.liteGlContext.createBuffer(new Float32Array([
-                0, 0, 1, 0, 1, 1, 0, 1
-            ]), WebGLRenderingContext.ARRAY_BUFFER, WebGLRenderingContext.STATIC_DRAW, WebGLRenderingContext.FLOAT, 2)
+            ])),
+            indexBuffer: this.liteGlContext.createBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), {
+                target: WebGLRenderingContext.ELEMENT_ARRAY_BUFFER,
+                dataType: WebGLRenderingContext.UNSIGNED_SHORT,
+                components: 1
+            }),
+            textureBuffer: this.liteGlContext.createBuffer(new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), {components: 2})
         });
 
         this.setText(this.text);

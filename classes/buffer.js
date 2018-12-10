@@ -1,10 +1,11 @@
 export class Buffer{
-    constructor(data, target, usage, dataType, components){
+    constructor(data, options){
+        options = options || {};
         this.data = data;
-        this.target = target;
-        this.usage = usage;
-        this.dataType = dataType;
-        this.components = components;
+        this.target = options.target || WebGLRenderingContext.ARRAY_BUFFER;
+        this.usage = options.usage || WebGLRenderingContext.STATIC_DRAW;
+        this.dataType = options.dataType || WebGLRenderingContext.FLOAT;
+        this.components = options.components || 3;
         this.instance = null;
         this.glContext = null;
     }

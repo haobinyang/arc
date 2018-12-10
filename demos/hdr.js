@@ -11,12 +11,8 @@ import CubeModel from '../models/cube.js';
 
 export default (async function(){
     let canvas = document.querySelector('#canvas');
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
-    canvas.style['width'] = window.innerWidth + 'px';
-    canvas.style['height'] = window.innerHeight + 'px';
 
     let liteGl = new LiteGL(canvas, {fps: true});
 

@@ -17,6 +17,12 @@ export class LiteGL{
         this.canvasInstance.setAttribute('tabindex', 1); // 监听键盘事件
 
         this.options = options || {};
+
+        if(options.fullScreen){ // full screen
+            this.canvasInstance.width = window.innerWidth;
+            this.canvasInstance.height = window.innerHeight;
+        }
+
         this.gl = canvasInstance.getContext('webgl', this.options);
 
         this.width = canvasInstance.width;
