@@ -15,12 +15,7 @@ export default (async function(){
     canvas.height = window.innerHeight;
 
     let liteGl = new LiteGL(canvas, {fps: true});
-
-    // 扩展
-    let depthTexExt = liteGl.getExtension('WEBGL_depth_texture');
-    let fragDepthExt = liteGl.getExtension("EXT_frag_depth");
-    let bufferFloat = liteGl.getExtension('EXT_color_buffer_float');
-    let textureFloat = liteGl.getExtension('OES_texture_float');
+    liteGl.setExtension(['WEBGL_depth_texture', 'EXT_frag_depth', 'EXT_color_buffer_float', 'OES_texture_float']);
 
     let vertexShaderCode = await Tools.readFile('./shaders/gundam.vs');
     let fragmentShaderCode = await Tools.readFile('./shaders/gundam.fs');

@@ -67,6 +67,17 @@ export class LiteGL{
         });
     }
 
+    // parameter array
+    setExtension(extension){
+        if(Tools.isString(extension)){
+            this.gl.getExtension(extension);
+        }else if(Tools.isArray(extension)){
+            extension.forEach(item => {
+                this.gl.getExtension(item);
+            });
+        }
+    }
+
     start(){
         this.textureIndex = 0;
         this.FPS && this.FPS.start();

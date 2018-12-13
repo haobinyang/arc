@@ -30,3 +30,6 @@ http://www.songho.ca/opengl/gl_camera.html
 
 // 圣诞树
 https://community.wolfram.com/groups/-/m/t/175891
+
+// particle
+http://buildnewgames.com/particle-systems/

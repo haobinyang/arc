@@ -5,6 +5,9 @@ export default {
     isArray(obj){
         return Object.prototype.toString.call(obj) === '[object Array]';
     },
+    isString(obj){
+        return Object.prototype.toString.call(obj) === '[object String]';
+    },
     isFloat32Array(obj){
         return Object.prototype.toString.call(obj) === '[object Float32Array]';
     },
