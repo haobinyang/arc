@@ -4,10 +4,15 @@
 		<title>Emmet</title>
 	</head>
 	<body>
-    <p>Click </p><a href="">here</a> to continue<a href="qq.com"><span></span></a>
-    <div></div>
-    <a href="qq.com"><span></span></a>
-    <div></div>
+    <p class="item1"><div></div></p><a href=""></a><a href=""></a>
+    <p class="item2"><div></div></p><a href=""></a><a href=""></a>
+    <p class="item3"><div></div></p><a href=""></a><a href=""></a>
+    <p class="item4"><div></div></p><a href=""></a><a href=""></a>
+    <p class="item5"><div></div></p><a href=""></a><a href=""></a>
+    dl>p.item$*5>div^^a*2+(header>ul>li*2>a)
+    p.item$*5>div^a*2+(header>ul>li*2>a)
+    (p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))
+    (p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))
 		<script type="text/javascript">
 			function emmet(str) {
 			    const keyToken = [
@@ -28,60 +33,33 @@
                     '{',
                     '}' // text
                 ];
-				let tree = {children: [], parent: null};
 
-				let token = '', currentNode = tree, tokenList = [];
+			    str = str.replace(/#([^+>*^.]*)/gi, function(rs, val){return '[id="' + val + '"]'})
+                    .replace(/\.([^+>*^#]*)/gi, function(rs, val){return '[class="' + val + '"]'}); // 将#id和.class替换为[]属性
 
-				let charList = str.split('');
+                const tokenRegex = /(?<text>{.+?})|(?<group>\(.+?\))|(?<cal>[\$\@\-\d]*\*\d+)|(?<level>[\>\+\^]+)|(?<tag>[a-z]+(\[.+?\])*)/gi;
+                const tokenList = str.match(tokenRegex);
 
-				for(let index = 0; index < charList.length; index++){
-				    let char = charList[index];
+                let curToken = [], preToken = null;
+                while((curToken = tokenRegex.exec(str)) !== null){
+                    let groups = curToken.groups;
+                    if(groups.text){ // 标签，可能带有属性
 
-                    if(keyToken.indexOf(char) > -1){ // 关键token
-                        if(token != '' && keyToken.indexOf(str[index - 1]) < 0){ // 处理之前的普通token
-                            tokenList.push(token);
-                            token = '';
-                        }
+                    }else if(groups.group){
 
-                        token = token + char;
-                    }else{ // 普通token
-                        if(str[index - 1] == '*'){ // 上一个是*，并且后面是数字
-                            let num = '';
-                            while(!isNaN(parseInt(str[index]))){
-                                num += str[index];
-                                index++;
-                            }
+                    }else if(groups.cal){
 
-                            if(num != ''){
-                                token += num.toString();
-                                index--;
-                            }else{
-                                throw '* must with number';
-                            }
-                            tokenList.push(token);
-                            token = '';
-                            continue;
-                        }
+                    }else if(groups.level){
 
-                        if(token != '' && keyToken.indexOf(str[index - 1]) > -1){ // 处理之前的关键token
-                            tokenList.push(token);
-                            token = '';
-                        }
+                    }else if(groups.tag){
 
-                        token = token + char;
                     }
-                }
-
-                if(token != ''){
-				    tokenList.push(token);
                 }
 
                 return tokenList;
 			}
 
-			const reg = 'p{Click }+a{here}+{ to continue}'.match(/({.+?})|([a-z]+)|(\$.*\*\d+?)|([\*>\+\^])|(\[.+?\])|(\(.+?\))/ig);
-
-			console.log(emmet('ul>li*55>div'));
+			emmet('div#test[id="ccccabc"][class="aaaa"]>(header>ul>li*2>a)+footer>p$*55>div[class="ff"]+span+span');
 		</script>
 	</body>
 </html>
