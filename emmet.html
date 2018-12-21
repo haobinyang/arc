@@ -16,51 +16,53 @@
     (p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))
 		<script type="text/javascript">
 			function emmet(str) {
-			    const keyToken = [
-			        '>', // child
-                    '+', // sibling
-                    '^', // climb-up
-                    '*', // multiplication
-                    '(',
-                    ')',
-                    '#', // ID
-                    '.', // class
-                    '[',
-                    ']', // attribute
-                    '=', // in attribute
-                    '$', // item numbering
-                    '@',
-                    '-', // changing numbering base and direction
-                    '{',
-                    '}' // text
-                ];
+			    str = str.replace(/#([^+>*^.\[]*)/gi, function(rs, val){return '[id="' + val + '"]'})
+                    .replace(/\.([^+>*^#\[]*)/gi, function(rs, val){return '[class="' + val + '"]'}); // 将#id和.class替换为[]属性
 
-			    str = str.replace(/#([^+>*^.]*)/gi, function(rs, val){return '[id="' + val + '"]'})
-                    .replace(/\.([^+>*^#]*)/gi, function(rs, val){return '[class="' + val + '"]'}); // 将#id和.class替换为[]属性
+                const tokenRegex = /(?<text>{.+?})|(?<attr>\[.+?\])|(?<group>\(.+?\))|(?<cal>[\$\@\-\d]*\*\d+)|(?<level>[\>\+\^]+)|(?<tag>[a-z1-6]+)/gi;
 
-                const tokenRegex = /(?<text>{.+?})|(?<group>\(.+?\))|(?<cal>[\$\@\-\d]*\*\d+)|(?<level>[\>\+\^]+)|(?<tag>[a-z]+(\[.+?\])*)/gi;
-                const tokenList = str.match(tokenRegex);
+                let curToken, preToken = null;
 
-                let curToken = [], preToken = null;
+                const d = document;
+                let tree = d.createDocumentFragment(), currentNode = tree;
+
                 while((curToken = tokenRegex.exec(str)) !== null){
-                    let groups = curToken.groups;
-                    if(groups.text){ // 标签，可能带有属性
+                    let g = curToken.groups, t = curToken[0];
 
-                    }else if(groups.group){
+                    if(g.text){ // 标签，可能带有属性
+                        if(preToken.groups.tag){ // 上个token为标签
+                            currentNode.lastChild.appendChild(d.createTextNode(t.substr(1, t.length - 2)));
+                        }else{
+                            currentNode.appendChild(d.createTextNode(t.substr(1, t.length - 2)));
+                        }
+                    }else if(g.group){
+                        let gFrag = emmet(t.substr(1, t.length - 2));
+                        currentNode.appendChild(gFrag);
+                    }else if(g.cal){
 
-                    }else if(groups.cal){
-
-                    }else if(groups.level){
-
-                    }else if(groups.tag){
-
+                    }else if(g.level){
+                        if(g.level == '>'){
+                            currentNode = currentNode.lastChild;
+                        }else if(g.level == '^'){
+                            currentNode = currentNode.parentNode;
+                        }
+                    }else if(g.tag){
+                        currentNode.appendChild(d.createElement(t));
+                    }else if(g.attr){
+                        let kvStr = t.substr(1, t.length - 2).split(/[\'\"]+ /gi);
+                        for(let i = 0; i < kvStr.length; i++){
+                            let kv = kvStr[i].split('=');
+                            currentNode.lastChild.setAttribute(kv[0], kv[1].replace(/[\"\']/gi, ''));
+                        }
                     }
+
+                    preToken = curToken;
                 }
 
-                return tokenList;
+                return tree;
 			}
 
-			emmet('div#test[id="ccccabc"][class="aaaa"]>(header>ul>li*2>a)+footer>p$*55>div[class="ff"]+span+span');
+			console.log(emmet('div>span{i am span}^p+(h1>span{span in group})+div#divId[title="title" class="class1 class2"]'));//div>(header>ul>li*2>a)+footer>p$*5>div+span+span{i am span}
 		</script>
 	</body>
 </html>
