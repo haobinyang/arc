@@ -17,7 +17,7 @@
                 const tokenRegex = /(?<t>{.+?})|(?<a>\[.+?\])|(?<g>\(.+?\))|(?<c>[\$\@\-\d]*\*\d+)|(?<l>[\>\+\^]+)|(?<tg>[a-z1-6]+)/gi;
 
                 str = str[rpc](/([#\.])([^+>*^.\[]*)/gi, function(rs, g1, g2){
-                    return '[' + g1[rpc]('.','class')[rpc]('#','id') + '="' + g2 + '"]'
+                    return '[' + g1[rpc]('.','class')[rpc]('#','id') + '="' + g2 + '"]';
                 }); // 将#id和.class替换为[]属性
 
                 let tree = d.createDocumentFragment(), currentNode = tree, curToken, preToken;
