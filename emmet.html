@@ -4,23 +4,22 @@
 		<title>Emmet</title>
 	</head>
 	<body>
-    <!--https://docs.emmet.io/-->
-    <!--dl>p.item$*5>div^^a*2+(header>ul>li*2>a)-->
-    <!--p.item$*5>div^a*2+(header>ul>li*2>a)-->
-    <!--(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))-->
-    <!--(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))+(p.item>div^a*2+(header>ul>li*2>a))-->
+        emmet:<br><textarea id="emmet" cols="60" rows="10"></textarea><br>
+        html:<br><textarea id="html" cols="60" rows="10"></textarea><br>
+        <button onclick="emmetToHtml()">emmet to html</button>
+
+        <!--https://docs.emmet.io/-->
 		<script type="text/javascript">
 			function emmet(str) {
-                const d = document, ac = 'appendChild', lc = 'lastChild', ctn = 'createTextNode', ss = 'substr', lth = 'length', rpc = 'replace', sp = 'split', g = 'groups';
+                const d = document, ac = 'appendChild', lc = 'lastChild', ctn = 'createTextNode', 
+                ss = 'substr', lth = 'length', rpc = 'replace', sp = 'split', g = 'groups',
+                pn = 'parentNode', cn = 'cloneNode';
 
                 // t for text, a for attr, g for group, c for cal, l for level, e for tag
-                const tokenRegex = /(?<t>{.+?})|(?<a>\[.+?\])|(?<g>\(.+?\))|(?<c>[\$\@\-\d]*\*\d+)|(?<l>[\>\+\^]+)|(?<e>[a-z1-6]+)/gi;
+                const tokenRegex = /(?<t>{.+?})|(?<a>\[.+?\])|(?<g>\(.+\))|(?<c>[\$\@\-\d]*\*\d+)|(?<l>[\>\+\^]+)|(?<e>[a-z1-6]+)/gi;
 
-                let tree = d.createDocumentFragment(), currentNode = tree, curToken, preToken;
-                
-                console.log(str.match(tokenRegex));
-
-                let timesArr = [];
+                let tree = d.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag;
+                let timesArr = []; // {times: 0, depth: 0}
 
                 while((curToken = tokenRegex.exec(str)) !== null){
                     let gp = curToken[g], t = curToken[0];
@@ -32,32 +31,32 @@
                             currentNode[ac](d[ctn](t[ss](1, t[lth] - 2)));
                         }
                     }else if(gp.g){ // 分组
-                        let gFrag = emmet(t[ss](1, t[lth] - 2));
-                        currentNode[ac](gFrag);
+                        gFrag = emmet(t[ss](1, t[lth] - 2));
+                        currentNode[ac](gFrag[cn](true));
                     }else if(gp.c){
                         let times = parseInt(gp.c[sp]('*')[1]);
 
-                        if(str[curToken.index + curToken[0].length] == '>'){
-                            timesArr.push({times: times, depth: 0});
+                        if(str[curToken.index + curToken[0][lth]] == '>'){
+                            timesArr.push({t: times, d: 0});
                         }else{
                             for(let j = 1; j < times; j++){
-                                currentNode[ac](currentNode[lc].cloneNode(true));
+                                currentNode[ac](preToken && preToken[g].g ? gFrag[cn](true) : currentNode[lc][cn](true));
                             }
                         }
                     }else if(gp.l){ // 树层级控制
-                        let levelArr = gp.l.split('');
-                        for(let l = 0; l < levelArr.length; l++){
+                        let levelArr = gp.l[sp]('');
+                        for(let l = 0; l < levelArr[lth]; l++){
                             if(levelArr[l] == '>'){
-                                for(let i = 0; i < timesArr.length; i++)timesArr[i].depth++;
+                                for(let i = 0; i < timesArr[lth]; i++)timesArr[i].d++;
                                 currentNode = currentNode[lc];
                             }else if(levelArr[l]== '^'){
-                                for(let i = timesArr.length - 1; i > -1; i--){
-                                    if(--(timesArr[i].depth) < 1){
-                                        while(--(timesArr[i].times))currentNode.parentNode.appendChild(currentNode.cloneNode(true));
+                                for(let i = timesArr[lth] - 1; i > -1; i--){
+                                    if(--(timesArr[i].d) < 1){
+                                        while(--(timesArr[i].t))currentNode[pn][ac](currentNode[cn](true));
                                         timesArr.splice(i, 1);
                                     }
                                 }
-                                currentNode = currentNode.parentNode;
+                                if(currentNode[pn])currentNode = currentNode[pn];
                             }
                         }
                     }else if(gp.e){ // 非文本标签
@@ -73,20 +72,32 @@
                     if(!gp.a)preToken = curToken; // curToken为属性时不需要更新
                 }
 
-                if(timesArr.length){
-                    for(let i = timesArr.length - 1; i > -1; i--){
-                        while(timesArr[i].depth-- > 1){
-                            currentNode = currentNode.parentNode;
+                if(timesArr[lth]){
+                    for(let i = timesArr[lth] - 1; i > -1; i--){
+                        while(timesArr[i].d-- > 1){
+                            currentNode = currentNode[pn];
                         }
-                        while(--(timesArr[i].times))currentNode.parentNode.appendChild(currentNode.cloneNode(true));
+                        while(--(timesArr[i].t))currentNode[pn][ac](currentNode[cn](true));
                     }
                 }
 
                 return tree;
-			}
-			console.log(emmet('div[title="title"]*2>span{i am span}^p+(h1>span{span in group})+div[title="title" class="class1 class2"]{wenben}*3'));//div>(header>ul>li*2>a)+footer>p$*5>div+span+span{i am span}
+            }
+            
+            let badCases = [
+                '(div>dl>(dt+dd)*3)+footer>p',
+                'div+{ hello guys!@#$%^&*().[]{}+(div+header>ul>li*5>a{click})*2+footer>p'
+            ];
 
-			//console.log(emmet('div*3>p*2>span*5'));//div>(header>ul>li*2>a)+footer>p$*5>div+span+span{i am span}
+            for(let i = 0; i < badCases.length; i++){
+                console.log(emmet(badCases[i]));
+            }
+            
+            function emmetToHtml(){
+                let div = document.createElement('div');
+                div.append(emmet(document.querySelector('#emmet').value));
+                document.querySelector('#html').value = div.innerHTML;
+            }
 		</script>
 	</body>
 </html>
