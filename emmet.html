@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+        <meta charset="utf-8">
 		<title>Emmet</title>
 	</head>
 	<body>
@@ -16,62 +17,79 @@
                 parentNode = 'parentNode', cloneNode = 'cloneNode';
 
                 // t for text, a for attr, g for group, c for cal, l for level, e for tag
-                var tokenRegex = /(?<t>{.+?})|(?<a>\[.+?\])|(?<g>\(.+\))|(?<c>[\$\@\-\d]*\*\d+)|(?<l>[\>\+\^]+)|(?<e>[a-z1-6]+)/g;
-
-                var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, gp, t, times;
+                // var regexGroupName = {t: 1, a: 2, g: 3, c: 4, l: 5, e: 6};
+                var tokenRegex = /({.+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
+                var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match, times;
                 var timesArr = []; // {times: 0, depth: 0}
-                var i, j, l, kvStr, kv, levelArr;
+                var i, k, kvStr, kv, levelArr;
+
+                function cut(match){
+					return match[substr](1, match[length] - 2);
+                }
+                function repeat(times){
+                    while(--times){
+                        currentNode[parentNode][appendChild](currentNode[cloneNode](true));
+                    }
+                }
 
                 while(curToken = tokenRegex.exec(str)){
-                    gp = curToken[groups];
-                    t = curToken[0];
+                    match = curToken[0];
 
-                    if(gp.t){ // 文本标签
-                        if(preToken && preToken[groups].e){ // 上个token为标签
-                            currentNode[lastChild][appendChild](doc[createTextNode](t[substr](1, t[length] - 2)));
+                    if(curToken[1]){ // 文本标签
+                        if(preToken && preToken[6]){ // 上个token为标签
+                            currentNode[lastChild][appendChild](doc[createTextNode](cut(match)));
                         }else{
-                            currentNode[appendChild](doc[createTextNode](t[substr](1, t[length] - 2)));
+                            currentNode[appendChild](doc[createTextNode](cut(match)));
                         }
-                    }else if(gp.g){ // 分组
-                        gFrag = emmet(t[substr](1, t[length] - 2));
+                    }else if(curToken[3]){ // 分组
+                        gFrag = emmet(cut(match));
                         currentNode[appendChild](gFrag[cloneNode](true));
-                    }else if(gp.c){
-                        times = +(gp.c[split]('*')[1]);
+                    }else if(curToken[4]){
+                        times = +curToken[4][split]('*')[1];
 
                         if(str[curToken.index + curToken[0][length]] == '>'){
                             timesArr.push({t: times, d: 0});
                         }else{
-                            for(j = 1; j < times; j++){
-                                currentNode[appendChild](preToken && preToken[groups].g ? gFrag[cloneNode](true) : currentNode[lastChild][cloneNode](true));
+                            while(times-- > 1){
+                                currentNode[appendChild](preToken && preToken[3] ? gFrag[cloneNode](true) : currentNode[lastChild][cloneNode](true));
                             }
                         }
-                    }else if(gp.l){ // 树层级控制
-                        levelArr = gp.l[split]('');
-                        for(l = 0; l < levelArr[length]; l++){
-                            if(levelArr[l] == '>'){
-                                for(i = 0; i < timesArr[length]; i++)timesArr[i].d++;
-                                if(currentNode[lastChild].nodeType != 3)currentNode = currentNode[lastChild]; // 非文本节点才进行赋值
-                            }else if(levelArr[l] == '^'){
-                                for(i = timesArr[length] - 1; i > -1; i--){
+                    }else if(curToken[5]){ // 树层级控制
+                        levelArr = curToken[5][split]('');
+                        for(k = 0; k < levelArr[length]; k++){
+                            if(levelArr[k] == '>'){
+                                for(i = 0; i < timesArr[length]; i++){
+                                    timesArr[i].d++;
+                                }
+                                if(currentNode[lastChild].nodeType != 3){ // 非文本节点才进行赋值
+                                    currentNode = currentNode[lastChild];
+                                }
+                            }else if(levelArr[k] == '^'){
+                                i = timesArr[length] - 1;
+                                while(i-- > -1){
                                     if(--(timesArr[i].d) < 1){
-                                        while(--(timesArr[i].t))currentNode[parentNode][appendChild](currentNode[cloneNode](true));
+                                        repeat(timesArr[i].t);
                                         timesArr.splice(i, 1);
                                     }
                                 }
-                                if(currentNode[parentNode])currentNode = currentNode[parentNode];
+                                if(currentNode[parentNode]){
+                                    currentNode = currentNode[parentNode];
+                                }
                             }
                         }
-                    }else if(gp.e){ // 非文本标签
-                        currentNode[appendChild](doc.createElement(t));
-                    }else if(gp.a){ // 属性
-                        kvStr = t[substr](1, t[length] - 2)[split](/[\'\"]+ /g);
+                    }else if(curToken[6]){ // 非文本标签
+                        currentNode[appendChild](doc.createElement(match));
+                    }else if(curToken[2]){ // 属性
+                        kvStr = cut(match)[split](/[\'\"]+ /g);
                         for(i = 0; i < kvStr[length]; i++){
                             kv = kvStr[i][split]('=');
                             currentNode[lastChild].setAttribute(kv[0], kv[1][replace](/[\"\']/g, ''));
                         }
                     }
 
-                    if(!gp.a)preToken = curToken; // curToken为属性时不需要更新
+                    if(!curToken[2]){ // curToken为属性时不需要更新
+                        preToken = curToken;
+                    }
                 }
 
                 if(timesArr[length]){
@@ -79,24 +97,24 @@
                         while(timesArr[i].d-- > 1){
                             currentNode = currentNode[parentNode];
                         }
-                        while(--(timesArr[i].t))currentNode[parentNode][appendChild](currentNode[cloneNode](true));
+                        repeat(timesArr[i].t);
                     }
                 }
 
                 return tree;
             }
             
-            let badCases = [
+            var badCases = [
                 '(div>dl>(dt+dd)*3)+footer>p',
                 'div+{ hello guys!@#$%^&*().[]{}+(div+header>ul>li*5>a{click})*2+footer>p'
             ];
 
-            for(let i = 0; i < badCases.length; i++){
+            for(var i = 0; i < badCases.length; i++){
                 console.log(emmet(badCases[i]));
             }
             
             function emmetToHtml(){
-                let div = document.createElement('div');
+                var div = document.createElement('div');
                 div.append(emmet(document.querySelector('#emmet').value));
                 document.querySelector('#html').value = div.innerHTML;
             }
