@@ -2,7 +2,7 @@
 <html>
 	<head>
         <meta charset="utf-8">
-		<title>Emmet</title>
+		<title>Emmet to HTML</title>
 	</head>
 	<body>
         emmet:<br><textarea id="emmet" cols="60" rows="10"></textarea><br>
@@ -12,13 +12,13 @@
         <!--https://docs.emmet.io/-->
 		<script type="text/javascript">
 			function emmet(str) {
-                var doc = document, appendChild = 'appendChild', lastChild = 'lastChild', createTextNode = 'createTextNode', 
+                var doc = document, appendChild = 'appendChild', lastChild = 'lastChild', createTextNode = 'createTextNode',
                 substr = 'substr', length = 'length', replace = 'replace', split = 'split', groups = 'groups',
                 parentNode = 'parentNode', cloneNode = 'cloneNode';
 
                 // t for text, a for attr, g for group, c for cal, l for level, e for tag
                 // var regexGroupName = {t: 1, a: 2, g: 3, c: 4, l: 5, e: 6};
-                var tokenRegex = /({.+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
+                var tokenRegex = /({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
                 var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match, times;
                 var timesArr = []; // {times: 0, depth: 0}
                 var i, k, kvStr, kv, levelArr;
@@ -105,6 +105,7 @@
             }
             
             var badCases = [
+                '{hello}+{world}',
                 '(div>dl>(dt+dd)*3)+footer>p',
                 'div+{ hello guys!@#$%^&*().[]{}+(div+header>ul>li*5>a{click})*2+footer>p'
             ];

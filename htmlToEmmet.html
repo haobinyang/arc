@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="utf-8">
+		<title>HTML to emmet</title>
+	</head>
+	<body>
+    <div id="test">
+        <div>
+            i'm div
+            <ul>
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+                <li>4</li>
+                <li>5</li>
+            </ul>
+            <svg height="26px" viewBox="0 0 31 44" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-487.000000, -1265.000000)" fill="#000" fill-rule="nonzero"><g transform="translate(0.000000, 1239.000000)"><path d="M499.810631,29.3479042 L509.927413,29.3533065 L503.973946,42.1838027 C503.885298,42.3773256 503.838403,42.5874716 503.842589,42.7996665 C503.869955,43.5276283 504.476111,44.0881185 505.204046,44.0962219 C505.234149,44.0962219 505.251937,44.1083772 505.272461,44.1070265 C505.280671,44.1070265 507.941099,44.131337 513.253746,44.1799578 L496.879318,63.4148975 L499.710328,51.2664435 C499.721274,51.1475925 499.75685,51.0327934 499.752745,50.9098907 C499.723091,50.1595938 499.083028,49.574976 498.322873,49.6038813 C498.313751,49.6038813 495.879231,49.6065824 491.019313,49.6119847 L499.810631,29.3479042 Z M496.657654,52.3131419 L492.938618,68.2742792 C492.927672,68.3931301 492.892096,68.5065787 492.896201,68.6281307 C492.926304,69.3817536 493.566667,69.9652035 494.326073,69.9368414 C494.712793,69.9195137 495.073663,69.740187 495.318089,69.4438802 L517.15066,43.8017958 C517.433115,43.4717863 517.550274,43.1431719 517.539257,42.8064194 C517.509315,42.0851255 516.910525,41.514307 516.179169,41.509864 C516.097071,41.5004099 516.088861,41.5071628 516.076546,41.5071628 L507.33996,41.4180247 L513.304373,28.5659192 C513.393021,28.3723962 513.439916,28.1622503 513.43573,27.9500553 C513.421494,27.5894973 513.26268,27.2493016 512.994248,27.0043569 C512.725816,26.7594121 512.369771,26.6297976 512.00449,26.6440459 C511.995368,26.6440459 507.631091,26.6449463 498.911659,26.6467471 C498.323834,26.6597625 497.854505,26.9829858 497.650087,27.4665482 C497.640965,27.4881575 494.319193,35.1432367 487.684769,50.4317859 C487.601854,50.6156189 487.561648,50.8154305 487.567096,51.0165864 C487.597198,51.7675081 488.237562,52.3523086 488.996968,52.3225959 C489.007002,52.3216955 491.560564,52.3185441 496.657654,52.3131419 Z"></path></g></g></g></svg>
+            <span>span1</span>
+            <span>span2</span>
+            i'm end
+        </div>
+        <script type="text/javascript">
+            function test(){
+                var i = 'test';
+            }
+            test();
+        </script>
+    </div>
+    <div id="testCopy">
+
+    </div>
+        html:<br><textarea id="html" cols="60" rows="10"></textarea><br>
+        emmet:<br><textarea id="emmet" cols="60" rows="10"></textarea><br>
+        <button onclick="">emmet to html</button>
+
+        <!--https://docs.emmet.io/-->
+		<script type="text/javascript">
+            function emmet(str, isSvg) {
+                var doc = document, appendChild = 'appendChild', lastChild = 'lastChild', createTextNode = 'createTextNode',
+                    substr = 'substr', length = 'length', replace = 'replace', split = 'split', groups = 'groups',
+                    parentNode = 'parentNode', cloneNode = 'cloneNode';
+
+                // t for text, a for attr, g for group, c for cal, l for level, e for tag
+                var regexGroupName = {s: 1, t: 2, a: 3, g: 4, c: 5, l: 6, e: 7};
+                var tokenRegex = /(<script>[\w\W]*?<\/script>)|({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
+                var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match, times;
+                var timesArr = []; // {times: 0, depth: 0}
+                var i, k, kvStr, kv, levelArr;
+
+//                console.log(str);
+
+                function cut(match){
+                    return match[substr](1, match[length] - 2);
+                }
+                function repeat(times){
+                    while(--times){
+                        currentNode[parentNode][appendChild](currentNode[cloneNode](true));
+                    }
+                }
+
+                while(curToken = tokenRegex.exec(str)){
+                    match = curToken[0];
+
+                    if(curToken[regexGroupName.s]){ // script标签
+                        match = match.substr(8);
+                        currentNode[lastChild].text = match.substr(0, match.length - 9);
+                    }else if(curToken[regexGroupName.t]){ // 文本标签
+                        if(preToken && preToken[regexGroupName.e]){ // 上个token为标签
+                            currentNode[lastChild][appendChild](doc[createTextNode](cut(match)));
+                        }else{
+                            currentNode[appendChild](doc[createTextNode](cut(match)));
+                        }
+                    }else if(curToken[regexGroupName.g]){ // 分组
+                        gFrag = emmet(cut(match), match[substr](1, 3) == 'svg');
+                        currentNode[appendChild](gFrag[cloneNode](true));
+                    }else if(curToken[regexGroupName.c]){
+                        times = +curToken[regexGroupName.c][split]('*')[1];
+
+                        if(str[curToken.index + curToken[0][length]] == '>'){
+                            timesArr.push({t: times, d: 0});
+                        }else{
+                            while(times-- > 1){
+                                currentNode[appendChild](preToken && preToken[regexGroupName.g] ? gFrag[cloneNode](true) : currentNode[lastChild][cloneNode](true));
+                            }
+                        }
+                    }else if(curToken[regexGroupName.l]){ // 树层级控制
+                        levelArr = curToken[regexGroupName.l][split]('');
+                        for(k = 0; k < levelArr[length]; k++){
+                            if(levelArr[k] == '>'){
+                                for(i = 0; i < timesArr[length]; i++){
+                                    timesArr[i].d++;
+                                }
+                                if(currentNode[lastChild].nodeType != 3){ // 非文本节点才进行赋值
+                                    currentNode = currentNode[lastChild];
+                                }
+                            }else if(levelArr[k] == '^'){
+                                i = timesArr[length] - 1;
+                                while(i-- > -1){
+                                    if(--(timesArr[i].d) < 1){
+                                        repeat(timesArr[i].t);
+                                        timesArr.splice(i, 1);
+                                    }
+                                }
+                                if(currentNode[parentNode]){
+                                    currentNode = currentNode[parentNode];
+                                }
+                            }
+                        }
+                    }else if(curToken[regexGroupName.e]){ // 非文本标签
+                        if(isSvg){
+                            currentNode[appendChild](doc.createElementNS('http://www.w3.org/2000/svg', match));
+                        }else{
+                            currentNode[appendChild](doc.createElement(match));
+                        }
+                    }else if(curToken[regexGroupName.a]){ // 属性
+                        kvStr = cut(match)[split](/[\'\"]+ /g);
+                        for(i = 0; i < kvStr[length]; i++){
+                            kv = kvStr[i][split]('=');
+                            currentNode[lastChild].setAttribute(kv[0], kv[1][replace](/[\"\']/g, ''));
+                        }
+                    }
+
+                    if(!curToken[regexGroupName.a]){ // curToken为属性时不需要更新
+                        preToken = curToken;
+                    }
+                }
+
+                if(timesArr[length]){
+                    for(i = timesArr[length] - 1; i > -1; i--){
+                        while(timesArr[i].d-- > 1){
+                            currentNode = currentNode[parentNode];
+                        }
+                        repeat(timesArr[i].t);
+                    }
+                }
+
+                return tree;
+            }
+
+			function temme(str) {
+                var tree = document.createElement('div');
+                tree.innerHTML = str;
+
+                function getAttributes(node){
+                    var attributes = node.attributes, result = '';
+
+                    for(var i = 0; i < attributes.length; i++){
+                        var attribute = attributes[i];
+
+                        result += attribute.nodeName + '="' + attribute.nodeValue.trim().replace(/[\r\n]/gi, '') + '"';
+
+                        if(i != attributes.length - 1){
+                            result += ' ';
+                        }
+                    }
+
+                    return result;
+                }
+
+                function getTextNode(node){
+                    var text = node.nodeValue;
+
+                    if(node.nodeValue.trim() != ''){
+                        return node.parentNode.tagName.toLowerCase() == 'script' ? '<script>' + text.trim() + '<\/script>' : '{' + text + '}';
+                    }
+
+                    return '';
+                }
+
+                function isNotEmptyTextNode(node){
+                    return node.nodeType == 3 && node.nodeValue.trim() != ''
+                }
+
+                function travel(tree){
+                    var emmet = '', childEmmet = '';
+
+                    for(var i = 0; i < tree.length; i++){
+                        var node = tree[i];
+
+                        if(isNotEmptyTextNode(node)){ // 文本节点
+                            emmet += getTextNode(node);
+                        }else if(node.nodeType == 1 || node.nodeType == 7){
+                            var tagName = node.tagName.toLowerCase();
+                            var attributes = getAttributes(node);
+
+                            if(tagName == 'svg'){
+                                childEmmet = travel(node.childNodes);
+
+                                var upCount = 0;
+                                for(var j = childEmmet.length - 1; childEmmet[j] == '^' && j >= 0 && ++upCount; j--);
+
+                                emmet += '(' + tagName + (attributes ? '[' + attributes + ']' : '') + '>' + childEmmet.substr(0, childEmmet.length - upCount) + ')';
+                            }else{
+                                emmet += tagName;
+
+                                if(attributes){
+                                    emmet += '[' + attributes + ']';
+                                }
+
+                                var childNodes = node.childNodes;
+                                if(childNodes.length){
+                                    if(isNotEmptyTextNode(childNodes[0])){
+                                        emmet += getTextNode(childNodes[0]);
+                                        node.removeChild(childNodes[0]);
+                                    }
+
+                                    if(node.childNodes.length){
+                                        childEmmet = '>' + travel(node.childNodes) + '';
+                                        emmet += childEmmet + '^';
+                                    }
+                                }
+                            }
+                        }else{
+                            continue;
+                        }
+
+                        if(i != tree.length - 1 && emmet.substr(-1) != '^' && isNotEmptyTextNode(tree[i + 1])){
+                            emmet += '+';
+                        }
+                    }
+
+                    return emmet;
+                }
+
+                return travel(tree.childNodes);
+            }
+
+            // todo
+            // 标签名缩略
+
+            var htmlToEmmet = temme(document.querySelector('#test').innerHTML);
+            var t0 = performance.now();
+            var emmetToHtml = emmet(htmlToEmmet);
+            var t1 = performance.now();
+            console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+
+            while(emmetToHtml.childNodes.length){
+                document.querySelector('#testCopy').appendChild(emmetToHtml.childNodes[0]);
+            }
+		</script>
+	</body>
+</html>
