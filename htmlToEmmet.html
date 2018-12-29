@@ -6,7 +6,7 @@
 	</head>
 	<body>
     <div id="test">
-        <div>
+        <div title>
             i'm div
             <ul>
                 <li>1</li>
@@ -36,27 +36,23 @@
 
         <!--https://docs.emmet.io/-->
 		<script type="text/javascript">
-            function emmet(str, isSvg) {
+            var tagMap = {}; // tag alias [{tagName: '', weight: 0},{}]
+
+            function emmet(str, tagMap, selector) {
                 var doc = document, appendChild = 'appendChild', lastChild = 'lastChild', createTextNode = 'createTextNode',
                     substr = 'substr', length = 'length', replace = 'replace', split = 'split', groups = 'groups',
                     parentNode = 'parentNode', cloneNode = 'cloneNode';
 
                 // t for text, a for attr, g for group, c for cal, l for level, e for tag
-                var regexGroupName = {s: 1, t: 2, a: 3, g: 4, c: 5, l: 6, e: 7};
-                var tokenRegex = /(<script>[\w\W]*?<\/script>)|({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
-                var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match, times;
-                var timesArr = []; // {times: 0, depth: 0}
-                var i, k, kvStr, kv, levelArr;
+                var regexGroupName = {s: 1, t: 2, a: 3, g: 4, l: 5, e: 6};
+                var tokenRegex = /(<script>[\w\W]*?<\/script>)|({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\>\+\^]+)|([a-z0-9]+)/gi;
+                var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match;
+                var i, k, kvStr, kv, levelArr, isSvg = false;
 
-//                console.log(str);
+//                console.log(str.match(tokenRegex));
 
                 function cut(match){
                     return match[substr](1, match[length] - 2);
-                }
-                function repeat(times){
-                    while(--times){
-                        currentNode[parentNode][appendChild](currentNode[cloneNode](true));
-                    }
                 }
 
                 while(curToken = tokenRegex.exec(str)){
@@ -72,46 +68,29 @@
                             currentNode[appendChild](doc[createTextNode](cut(match)));
                         }
                     }else if(curToken[regexGroupName.g]){ // 分组
-                        gFrag = emmet(cut(match), match[substr](1, 3) == 'svg');
+                        gFrag = emmet(cut(match), tagMap);
                         currentNode[appendChild](gFrag[cloneNode](true));
-                    }else if(curToken[regexGroupName.c]){
-                        times = +curToken[regexGroupName.c][split]('*')[1];
-
-                        if(str[curToken.index + curToken[0][length]] == '>'){
-                            timesArr.push({t: times, d: 0});
-                        }else{
-                            while(times-- > 1){
-                                currentNode[appendChild](preToken && preToken[regexGroupName.g] ? gFrag[cloneNode](true) : currentNode[lastChild][cloneNode](true));
-                            }
-                        }
                     }else if(curToken[regexGroupName.l]){ // 树层级控制
                         levelArr = curToken[regexGroupName.l][split]('');
                         for(k = 0; k < levelArr[length]; k++){
                             if(levelArr[k] == '>'){
-                                for(i = 0; i < timesArr[length]; i++){
-                                    timesArr[i].d++;
-                                }
                                 if(currentNode[lastChild].nodeType != 3){ // 非文本节点才进行赋值
                                     currentNode = currentNode[lastChild];
                                 }
                             }else if(levelArr[k] == '^'){
-                                i = timesArr[length] - 1;
-                                while(i-- > -1){
-                                    if(--(timesArr[i].d) < 1){
-                                        repeat(timesArr[i].t);
-                                        timesArr.splice(i, 1);
-                                    }
-                                }
                                 if(currentNode[parentNode]){
                                     currentNode = currentNode[parentNode];
                                 }
                             }
                         }
                     }else if(curToken[regexGroupName.e]){ // 非文本标签
+                        if(tagMap[match] == 'svg'){
+                            isSvg = true;
+                        }
                         if(isSvg){
-                            currentNode[appendChild](doc.createElementNS('http://www.w3.org/2000/svg', match));
+                            currentNode[appendChild](doc.createElementNS('http://www.w3.org/2000/svg', tagMap[match]));
                         }else{
-                            currentNode[appendChild](doc.createElement(match));
+                            currentNode[appendChild](doc.createElement(tagMap[match]));
                         }
                     }else if(curToken[regexGroupName.a]){ // 属性
                         kvStr = cut(match)[split](/[\'\"]+ /g);
@@ -126,21 +105,61 @@
                     }
                 }
 
-                if(timesArr[length]){
-                    for(i = timesArr[length] - 1; i > -1; i--){
-                        while(timesArr[i].d-- > 1){
-                            currentNode = currentNode[parentNode];
-                        }
-                        repeat(timesArr[i].t);
+                if(selector){
+                    while(tree.childNodes.length){
+                        document.querySelector(selector).appendChild(tree.childNodes[0]);
                     }
+                }else{
+                    return tree;
                 }
-
-                return tree;
             }
 
 			function temme(str) {
                 var tree = document.createElement('div');
                 tree.innerHTML = str;
+
+                var tagWeight = [];
+                function calTagMap(tree){
+                    for(var i = 0; i < tree.length; i++){
+                        var node = tree[i];
+
+                        if(node.nodeType == 1 || node.nodeType == 7){
+                            var tagName = node.tagName.toLowerCase();
+
+                            var isExist = false;
+                            for(var j = 0; j < tagWeight.length; j++){
+                                if(tagWeight[j].tagName == tagName){
+                                    tagWeight[j].weight += tagName.length;
+                                    isExist = true;
+                                }
+                            }
+
+                            if(!isExist){
+                                tagWeight.push({tagName: tagName, weight: tagName.length});
+                            }
+
+                            if(node.childNodes.length){
+                                calTagMap(node.childNodes);
+                            }
+                        }
+                    }
+                }
+                calTagMap(tree.childNodes);
+
+                tagWeight = tagWeight.sort(function(a, b){
+                    return b.weight - a.weight;
+                });
+
+                var revertTagMap = {};
+                for(var i = 0; i < tagWeight.length; i++){
+                    if(i.toString().length > tagWeight[i].tagName.length){
+                        tagMap[tagWeight[i].tagName] = tagWeight[i].tagName;
+                        revertTagMap[tagWeight[i].tagName] = tagWeight[i].tagName;
+                    }else{
+                        tagMap[i] = tagWeight[i].tagName;
+                        revertTagMap[tagWeight[i].tagName] = i;
+                    }
+                }
 
                 function getAttributes(node){
                     var attributes = node.attributes, result = '';
@@ -181,10 +200,11 @@
                         if(isNotEmptyTextNode(node)){ // 文本节点
                             emmet += getTextNode(node);
                         }else if(node.nodeType == 1 || node.nodeType == 7){
-                            var tagName = node.tagName.toLowerCase();
+                            var originTagName = node.tagName.toLowerCase();
                             var attributes = getAttributes(node);
+                            var tagName = revertTagMap[originTagName];
 
-                            if(tagName == 'svg'){
+                            if(originTagName == 'svg'){
                                 childEmmet = travel(node.childNodes);
 
                                 var upCount = 0;
@@ -230,14 +250,14 @@
             // 标签名缩略
 
             var htmlToEmmet = temme(document.querySelector('#test').innerHTML);
-            var t0 = performance.now();
-            var emmetToHtml = emmet(htmlToEmmet);
-            var t1 = performance.now();
-            console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+//            var t0 = performance.now();
+            var emmetToHtml = emmet(htmlToEmmet, tagMap, '#testCopy');
+//            var t1 = performance.now();
+//            console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
 
-            while(emmetToHtml.childNodes.length){
-                document.querySelector('#testCopy').appendChild(emmetToHtml.childNodes[0]);
-            }
+//            while(emmetToHtml.childNodes.length){
+//                document.querySelector('#testCopy').appendChild(emmetToHtml.childNodes[0]);
+//            }
 		</script>
 	</body>
 </html>

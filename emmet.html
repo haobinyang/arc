@@ -18,10 +18,12 @@
 
                 // t for text, a for attr, g for group, c for cal, l for level, e for tag
                 // var regexGroupName = {t: 1, a: 2, g: 3, c: 4, l: 5, e: 6};
-                var tokenRegex = /({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z1-6]+)/gi;
+                var tokenRegex = /({[\w\W]+?})|(\[.+?\])|(\(.+\))|([\$\@\-\d]*\*\d+)|([\>\+\^]+)|([a-z0-9]+)/gi;
                 var tree = doc.createDocumentFragment(), currentNode = tree, curToken, preToken, gFrag, match, times;
                 var timesArr = []; // {times: 0, depth: 0}
                 var i, k, kvStr, kv, levelArr;
+
+                console.log(str.match(tokenRegex));
 
                 function cut(match){
 					return match[substr](1, match[length] - 2);
