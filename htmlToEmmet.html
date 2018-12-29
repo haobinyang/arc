@@ -95,7 +95,7 @@
                     }else if(curToken[regexGroupName.a]){ // 属性
                         kvStr = cut(match)[split](/[\'\"]+ /g);
                         for(i = 0; i < kvStr[length]; i++){
-                            kv = kvStr[i][split]('=');
+                            kv = kvStr[i][split](/=\"/);
                             currentNode[lastChild].setAttribute(kv[0], kv[1][replace](/[\"\']/g, ''));
                         }
                     }
