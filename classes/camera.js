@@ -1,5 +1,3 @@
-import {Vec3} from './vector.js';
-
 export class PerspectiveCamera{
     constructor(fov, aspect, near, far){
         this.fov = fov;

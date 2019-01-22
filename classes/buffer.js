@@ -1,11 +1,17 @@
-export class Buffer{
+export class Buffer {
     constructor(data, options){
-        options = options || {};
+        options = Object.assign({
+            target: WebGLRenderingContext.ARRAY_BUFFER,
+            usage: WebGLRenderingContext.STATIC_DRAW,
+            dataType: WebGLRenderingContext.FLOAT,
+            components: 3
+        }, options);
+
         this.data = data;
-        this.target = options.target || WebGLRenderingContext.ARRAY_BUFFER;
-        this.usage = options.usage || WebGLRenderingContext.STATIC_DRAW;
-        this.dataType = options.dataType || WebGLRenderingContext.FLOAT;
-        this.components = options.components || 3;
+        this.target = options.target;
+        this.usage = options.usage;
+        this.dataType = options.dataType;
+        this.components = options.components;
         this.instance = null;
         this.glContext = null;
     }
