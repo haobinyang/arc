@@ -1,4 +1,4 @@
-import {Color} from '../classes/color.js';
+// import {Color} from '../classes/color.js';
 
 export default {
 }

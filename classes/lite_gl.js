@@ -1,5 +1,5 @@
-import GlConfig from '../config/gl_config.js';
-import {Color} from './color.js';
+// import GlConfig from '../config/gl_config.js';
+// import {Color} from './color.js';
 import Tools from './tools.js';
 import {FPS} from './fps.js';
 import {Shader} from './shader.js';
