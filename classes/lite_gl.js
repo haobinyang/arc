@@ -205,7 +205,12 @@ export class LiteGL{
     }
 
     createBuffer(data, target, usage, dataType, components){
-        let buffer = new Buffer(data, target, usage, dataType, components);
+        let buffer = new Buffer(data, {
+            target: target || WebGLRenderingContext.ARRAY_BUFFER, 
+            usage: usage || WebGLRenderingContext.STATIC_DRAW, 
+            dataType: dataType || WebGLRenderingContext.FLOAT, 
+            components: components || 3
+        });
         buffer.glContext = this.gl;
         buffer.instance = this.gl.createBuffer();
         this.gl.bindBuffer(buffer.target, buffer.instance);

@@ -1,12 +1,5 @@
 export class Buffer {
     constructor(data, options){
-        options = Object.assign({
-            target: WebGLRenderingContext.ARRAY_BUFFER,
-            usage: WebGLRenderingContext.STATIC_DRAW,
-            dataType: WebGLRenderingContext.FLOAT,
-            components: 3
-        }, options);
-
         this.data = data;
         this.target = options.target;
         this.usage = options.usage;
