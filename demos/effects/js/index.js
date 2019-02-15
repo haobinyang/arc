@@ -12,7 +12,7 @@ export default (async function(){
     let frag = arc.createShader(await Tools.readFile('./shaders/frag.fs'), arc.FRAGMENT_SHADER);
 
     let planeForRealRender = new Model({
-        vertexBuffer: arc.createBuffer(new Float32Array([-1.0,1.0,0.0, 0.0,1.0,0.0, 0.0,0.0,0.0, -1.0,0.0,0.0])),
+        vertexBuffer: arc.createBuffer(new Float32Array([-0.5,0.5,0.0, 0.5,0.5,0.0, 0.5,-0.5,0.0, -0.5,-0.5,0.0])),
         indexBuffer: arc.createBuffer(new Uint16Array([0,1,2, 0,2,3]), arc.ELEMENT_ARRAY_BUFFER, arc.STATIC_DRAW, arc.UNSIGNED_SHORT, 1),
         textureBuffer: arc.createBuffer(new Float32Array([0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0]), arc.ARRAY_BUFFER, arc.STATIC_DRAW, arc.FLOAT, 2)
     });
@@ -36,45 +36,53 @@ export default (async function(){
         height: video.height
     }), iter = 0;
 
-    const frameDiff = 2;
+    const frameDiff = 10;
+
+    let rangeStart = 0.5;
 
     arc.onLoop = function(){
-        { // 正常渲染
-            if(iter !== 0 && iter % frameDiff === 0) {
-                arc.viewport(0, 0, arc.width, arc.height);
-                arc.clearColor(glm.vec4(0, 0, 0, 1));
-                arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
+        // 正常渲染
+        if(iter !== 0 && iter % frameDiff === 0) {
+            arc.viewport(0, 0, arc.width, arc.height);
+            arc.clearColor(glm.vec4(0, 0, 0, 1));
+            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
 
-                arc.useShader(vert, frag);
+            arc.useShader(vert, frag);
 
-                arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
-                arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
+            arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
+            arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
 
-                arc.useTexture(videoTexture, 'currentFrame');
-                arc.useTexture(preVideoTexture, 'preFrame');
-                arc.render(planeForRealRender, arc.TRIANGLES);
-            }
+            arc.setUniformf([rangeStart], 'rangeStart');
+            arc.setUniformf([rangeStart + 0.5], 'rangeEnd');
+
+            arc.useTexture(videoTexture, 'currentFrame');
+            arc.useTexture(preVideoTexture, 'preFrame');
+            arc.render(planeForRealRender, arc.TRIANGLES);
         }
 
-        { // 将视频帧渲染到纹理
-            if(iter % frameDiff === 0) {
-                arc.renderTo(arc.RenderMode.TEXTURE, preVideoTexture);
-                arc.viewport(0, 0, video.width, video.height);
-                arc.clearColor(glm.vec4(0, 0, 0, 1));
-                arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
+        // 将视频帧渲染到纹理
+        if(iter % frameDiff === 0) {
+            arc.renderTo(arc.RenderMode.TEXTURE, preVideoTexture);
 
-                arc.useShader(fbVert, fbFrag);
+            arc.viewport(0, 0, video.width, video.height);
+            arc.clearColor(glm.vec4(0, 0, 0, 1));
+            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
 
-                arc.setAttribute(planeForFrameBuffer.vertexBuffer, 'coordinates');
-                arc.setAttribute(planeForFrameBuffer.textureBuffer, 'textureCoord');
+            arc.useShader(fbVert, fbFrag);
 
-                arc.useTexture(videoTexture, 'uSampler');
-                arc.render(planeForFrameBuffer, arc.TRIANGLES);
+            arc.setAttribute(planeForFrameBuffer.vertexBuffer, 'coordinates');
+            arc.setAttribute(planeForFrameBuffer.textureBuffer, 'textureCoord');
 
-                arc.renderTo(arc.RenderMode.SCREEN);
-            }
+            arc.useTexture(videoTexture, 'uSampler');
+            arc.render(planeForFrameBuffer, arc.TRIANGLES);
+
+            arc.renderTo(arc.RenderMode.SCREEN);
         }
 
+        // rangeStart += 0.01;
+        // if(rangeStart >= 1.0){
+        //     rangeStart = -0.3;
+        // }
         iter++;
     };
 
