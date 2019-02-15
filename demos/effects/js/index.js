@@ -11,78 +11,71 @@ export default (async function(){
     let vert = arc.createShader(await Tools.readFile('./shaders/vertex.vs'), arc.VERTEX_SHADER);
     let frag = arc.createShader(await Tools.readFile('./shaders/frag.fs'), arc.FRAGMENT_SHADER);
 
-    let v1 = new Model({
+    let planeForRealRender = new Model({
         vertexBuffer: arc.createBuffer(new Float32Array([-1.0,1.0,0.0, 0.0,1.0,0.0, 0.0,0.0,0.0, -1.0,0.0,0.0])),
         indexBuffer: arc.createBuffer(new Uint16Array([0,1,2, 0,2,3]), arc.ELEMENT_ARRAY_BUFFER, arc.STATIC_DRAW, arc.UNSIGNED_SHORT, 1),
-        textureBuffer: arc.createBuffer(new Float32Array([
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0
-        ]), arc.ARRAY_BUFFER, arc.STATIC_DRAW, arc.FLOAT, 2)
+        textureBuffer: arc.createBuffer(new Float32Array([0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0]), arc.ARRAY_BUFFER, arc.STATIC_DRAW, arc.FLOAT, 2)
     });
 
-    let v2 = new Model({
+    let planeForFrameBuffer = new Model({
         vertexBuffer: arc.createBuffer(new Float32Array([-1.0,1.0,0.0, 1.0,1.0,0.0, 1.0,-1.0,0.0, -1.0,-1.0,0.0])),
         indexBuffer: arc.createBuffer(new Uint16Array([0,1,2, 0,2,3]), arc.ELEMENT_ARRAY_BUFFER, arc.STATIC_DRAW, arc.UNSIGNED_SHORT, 1),
-        textureBuffer: arc.createBuffer(new Float32Array([
-            0.0, 1.0,
-            1.0, 1.0,
-            1.0, 0.0,
-            0.0, 0.0
-        ]), arc.ARRAY_BUFFER, arc.STATIC_DRAW, arc.FLOAT, 2)
+        textureBuffer: arc.createBuffer(new Float32Array([0.0,1.0, 1.0,1.0, 1.0,0.0, 0.0,0.0]), arc.ARRAY_BUFFER, arc.STATIC_DRAW, arc.FLOAT, 2)
     });
 
-    let video = await Tools.getVideo('../../textures/Firefox.mp4', {loop: true});
+    let video = await Tools.getVideo('../../textures/Firefox.mp4', {loop: true, muted: true});
     let videoTexture = arc.createTexture(video, {
         format: arc.RGB,
-        type: arc.UNSIGNED_BYTE,
         generateMipmaps: false
     });
 
-    let iter = 0;
+    let preVideoTexture = arc.createTexture(null, {
+        format: arc.RGB,
+        generateMipmaps: false,
+        width: video.width,
+        height: video.height
+    }), iter = 0;
+
+    const frameDiff = 2;
 
     arc.onLoop = function(){
-        let preVideoTexture = arc.createTexture(null, {
-            format: arc.RGB,
-            type: arc.UNSIGNED_BYTE,
-            generateMipmaps: false,
-            width: video.width,
-            height: video.height
-        });
+        { // 正常渲染
+            if(iter !== 0 && iter % frameDiff === 0) {
+                arc.viewport(0, 0, arc.width, arc.height);
+                arc.clearColor(glm.vec4(0, 0, 0, 1));
+                arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
+
+                arc.useShader(vert, frag);
+
+                arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
+                arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
+
+                arc.useTexture(videoTexture, 'currentFrame');
+                arc.useTexture(preVideoTexture, 'preFrame');
+                arc.render(planeForRealRender, arc.TRIANGLES);
+            }
+        }
 
         { // 将视频帧渲染到纹理
-            arc.renderTo(arc.RenderMode.TEXTURE, preVideoTexture);
-            arc.viewport(0, 0, video.width, video.height);
-            arc.clearColor(glm.vec4(0, 0, 0, 1));
-            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
+            if(iter % frameDiff === 0) {
+                arc.renderTo(arc.RenderMode.TEXTURE, preVideoTexture);
+                arc.viewport(0, 0, video.width, video.height);
+                arc.clearColor(glm.vec4(0, 0, 0, 1));
+                arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
 
-            arc.useShader(fbVert, fbFrag);
+                arc.useShader(fbVert, fbFrag);
 
-            arc.setAttribute(v2.vertexBuffer, 'coordinates');
-            arc.setAttribute(v2.textureBuffer, 'textureCoord');
+                arc.setAttribute(planeForFrameBuffer.vertexBuffer, 'coordinates');
+                arc.setAttribute(planeForFrameBuffer.textureBuffer, 'textureCoord');
 
-            arc.useTexture(videoTexture, 'uSampler');
-            arc.render(v2, arc.TRIANGLES);
+                arc.useTexture(videoTexture, 'uSampler');
+                arc.render(planeForFrameBuffer, arc.TRIANGLES);
+
+                arc.renderTo(arc.RenderMode.SCREEN);
+            }
         }
 
-        { // 正常渲染
-            arc.renderTo(arc.RenderMode.SCREEN);
-
-            arc.viewport(0, 0, arc.width, arc.height);
-            arc.clearColor(glm.vec4(0, 0, 0, 1));
-            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
-
-            arc.useShader(vert, frag);
-
-            arc.setAttribute(v1.vertexBuffer, 'coordinates');
-            arc.setAttribute(v1.textureBuffer, 'textureCoord');
-
-            arc.useTexture(preVideoTexture, 'uSampler');
-            arc.render(v1, arc.TRIANGLES);
-        }
-
-        arc.deleteTexture(preVideoTexture); // 记得删除纹理，不然内存会爆炸
+        iter++;
     };
 
     document.querySelector('#start').addEventListener('click', function(){
