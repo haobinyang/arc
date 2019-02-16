@@ -8,8 +8,8 @@ export default (async function(){
     let fbVert = arc.createShader(await Tools.readFile('./shaders/framebuffer.vs'), arc.VERTEX_SHADER);
     let fbFrag = arc.createShader(await Tools.readFile('./shaders/framebuffer.fs'), arc.FRAGMENT_SHADER);
 
-    let vert = arc.createShader(await Tools.readFile('./shaders/vertex.vs'), arc.VERTEX_SHADER);
-    let frag = arc.createShader(await Tools.readFile('./shaders/frag.fs'), arc.FRAGMENT_SHADER);
+    let screenVert = arc.createShader(await Tools.readFile('./shaders/screen.vs'), arc.VERTEX_SHADER);
+    let screenFrag = arc.createShader(await Tools.readFile('./shaders/screen.fs'), arc.FRAGMENT_SHADER);
 
     let planeForRealRender = new Model({
         vertexBuffer: arc.createBuffer(new Float32Array([-0.5,0.5,0.0, 0.5,0.5,0.0, 0.5,-0.5,0.0, -0.5,-0.5,0.0])),
@@ -29,42 +29,29 @@ export default (async function(){
         generateMipmaps: false
     });
 
-    let preVideoTexture = arc.createTexture(null, {
+    let repeatBg = await Tools.readImage('./images/repeat_bg.jpg');
+    let repeatBgTexture = arc.createTexture(repeatBg, {
         format: arc.RGB,
         generateMipmaps: false,
-        width: video.width,
-        height: video.height
-    }), iter = 0;
+        wrapS: arc.REPEAT,
+        wrapT: arc.REPEAT
+    });
 
-    const frameDiff = 10;
+    let fbTexture = arc.createTexture(null, {
+        format: arc.RGB,
+        generateMipmaps: false,
+        width: repeatBg.width,
+        height: repeatBg.height,
+        wrapS: arc.REPEAT,
+        wrapT: arc.REPEAT
+    });
 
-    let rangeStart = 0.5;
+    let step = 0;
 
     arc.onLoop = function(){
-        // 正常渲染
-        if(iter !== 0 && iter % frameDiff === 0) {
-            arc.viewport(0, 0, arc.width, arc.height);
-            arc.clearColor(glm.vec4(0, 0, 0, 1));
-            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
-
-            arc.useShader(vert, frag);
-
-            arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
-            arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
-
-            arc.setUniformf([rangeStart], 'rangeStart');
-            arc.setUniformf([rangeStart + 0.5], 'rangeEnd');
-
-            arc.useTexture(videoTexture, 'currentFrame');
-            arc.useTexture(preVideoTexture, 'preFrame');
-            arc.render(planeForRealRender, arc.TRIANGLES);
-        }
-
-        // 将视频帧渲染到纹理
-        if(iter % frameDiff === 0) {
-            arc.renderTo(arc.RenderMode.TEXTURE, preVideoTexture);
-
-            arc.viewport(0, 0, video.width, video.height);
+        { // 渲染到纹理，合并背景和视频
+            arc.renderTo(arc.RenderMode.TEXTURE, fbTexture);
+            arc.viewport(0, 0, repeatBg.width, repeatBg.height);
             arc.clearColor(glm.vec4(0, 0, 0, 1));
             arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
 
@@ -73,20 +60,43 @@ export default (async function(){
             arc.setAttribute(planeForFrameBuffer.vertexBuffer, 'coordinates');
             arc.setAttribute(planeForFrameBuffer.textureBuffer, 'textureCoord');
 
-            arc.useTexture(videoTexture, 'uSampler');
+            // 渲染背景
+            arc.setUniformi([0], 'isVideo');
+            arc.setUniformf([step], 'step');
+            arc.setUniformMatrix(glm.mat4(), 'scale');
+
+            arc.useTexture(repeatBgTexture, 'vSampler');
             arc.render(planeForFrameBuffer, arc.TRIANGLES);
 
-            arc.renderTo(arc.RenderMode.SCREEN);
+            // 渲染视频
+            // todo 添加白色边框
+            arc.setUniformi([1], 'isVideo');
+            arc.setUniformMatrix(glm.scale(glm.mat4(), glm.vec3(0.8,0.8,1)), 'scale');
+
+            arc.useTexture(videoTexture, 'vSampler');
+            arc.render(planeForFrameBuffer, arc.TRIANGLES);
+
+            step += 0.005;
         }
 
-        // rangeStart += 0.01;
-        // if(rangeStart >= 1.0){
-        //     rangeStart = -0.3;
-        // }
-        iter++;
+        { // 渲染到屏幕, 再做一次特效处理
+            arc.renderTo(arc.RenderMode.SCREEN);
+            arc.viewport(0, 0, arc.width, arc.height);
+            arc.clearColor(glm.vec4(0, 0, 0, 1));
+            arc.clear(arc.COLOR_BUFFER_BIT | arc.DEPTH_BUFFER_BIT);
+
+            arc.useShader(screenVert, screenFrag);
+
+            arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
+            arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
+
+            arc.useTexture(fbTexture, 'uSampler');
+            arc.render(planeForRealRender, arc.TRIANGLES);
+        }
     };
 
-    document.querySelector('#start').addEventListener('click', function(){
+    document.querySelector('#start').addEventListener('click', function click(){
         arc.start();
+        document.querySelector('#start').removeEventListener('click', click);
     });
 }());
