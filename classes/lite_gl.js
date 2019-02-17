@@ -142,7 +142,7 @@ export class LiteGL{
             const attachmentPoint = renderMode === this.RenderMode.TEXTURE ? this.gl.COLOR_ATTACHMENT0 : renderMode === this.RenderMode.DEPTH ? this.gl.DEPTH_ATTACHMENT : this.gl.STENCIL_ATTACHMENT;
             this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, attachmentPoint, this.gl.TEXTURE_2D, texture.instance, 0);
         }else{
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+            this.frameBufferInstance && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
     }
 
