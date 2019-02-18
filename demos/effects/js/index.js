@@ -46,7 +46,7 @@ export default (async function(){
         wrapT: arc.REPEAT
     });
 
-    let step = 0;
+    let step = 0, openRgbEffect = false;
 
     arc.onLoop = function(){
         { // 渲染到纹理，合并背景和视频
@@ -69,7 +69,6 @@ export default (async function(){
             arc.render(planeForFrameBuffer, arc.TRIANGLES);
 
             // 渲染视频
-            // todo 添加白色边框
             arc.setUniformi([1], 'isVideo');
             arc.setUniformMatrix(glm.scale(glm.mat4(), glm.vec3(0.8,0.8,1)), 'scale');
 
@@ -87,6 +86,8 @@ export default (async function(){
 
             arc.useShader(screenVert, screenFrag);
 
+            arc.setUniformi([openRgbEffect ? 1 : 0], 'openRgbEffect');
+
             arc.setAttribute(planeForRealRender.vertexBuffer, 'coordinates');
             arc.setAttribute(planeForRealRender.textureBuffer, 'textureCoord');
 
@@ -98,5 +99,9 @@ export default (async function(){
     document.querySelector('#start').addEventListener('click', function click(){
         arc.start();
         document.querySelector('#start').removeEventListener('click', click);
+    });
+
+    document.querySelector('#openRgbEffect').addEventListener('click', function () {
+       openRgbEffect = this.checked;
     });
 }());
